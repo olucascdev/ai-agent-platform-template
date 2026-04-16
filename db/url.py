@@ -66,10 +66,10 @@ def resolve_runtime_database_url(database_url: str) -> str:
 
 
 def resolve_migrations_database_url(database_url: str, database_url_migrations: str | None = None) -> str:
-    """Resolve URL final de migrations priorizando URL dedicada quando informada."""
+    """Resolve URL final de migrations com driver async para evitar dependencia sync extra."""
     base_url = database_url_migrations or database_url
-    sync_url = to_sync_database_url(base_url)
-    return ensure_sslmode_for_managed_databases(sync_url)
+    async_url = to_async_database_url(base_url)
+    return ensure_sslmode_for_managed_databases(async_url)
 
 
 def build_sqlalchemy_engine_kwargs(database_url: str) -> dict[str, Any]:

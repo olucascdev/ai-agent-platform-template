@@ -20,7 +20,13 @@
 - Sessao async (`async_engine`, `AsyncSessionLocal`, `get_async_session`) implementada.
 - Testes adicionados para modelo e camada de sessao.
 
+### Feature 3.3 - setup Alembic e migration inicial
+
+- Estrutura Alembic criada e configurada para migrations com asyncpg.
+- Migration inicial criada para tabela `leads`.
+- Helpers dedicados adicionados para resolver URL de migration e metadata.
+- Testes adicionados para configuracao do Alembic e contrato da migration.
+
 ## Proximas features da fase
 
-- Feature 3.3: setup Alembic e migration inicial.
 - Feature 3.4: implementacao do `lead_service`.

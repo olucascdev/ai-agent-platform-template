@@ -5,8 +5,8 @@
 - Implementada estrategia de conexao multi-provider em `db/url.py`.
 - Contrato de URLs definido:
   - `DATABASE_URL`: URL principal da aplicacao (runtime async).
-  - `DATABASE_URL_MIGRATIONS`: URL sync opcional para Alembic.
-- Adicionado fallback automatico para derivar URL sync de migration quando a URL dedicada nao existe.
+  - `DATABASE_URL_MIGRATIONS`: URL dedicada opcional para Alembic.
+- Adicionado fallback automatico para derivar URL de migration quando a URL dedicada nao existe.
 - Incluida compatibilidade com Supabase e Neon:
   - deteccao de host gerenciado;
   - injecao de `sslmode=require` quando ausente.
@@ -23,7 +23,7 @@
 ## Testes da feature
 
 - Criado `tests/test_db_url.py` para validar:
-  - normalizacao async/sync;
+  - normalizacao para driver async;
   - prioridade de URL dedicada de migrations;
   - aplicacao de `sslmode=require` em Supabase/Neon;
   - kwargs de engine para ambiente gerenciado.

@@ -14,11 +14,11 @@ def test_runtime_url_is_converted_to_async_driver() -> None:
     assert runtime_url.startswith("postgresql+asyncpg://")
 
 
-def test_migrations_url_fallback_converts_to_sync_driver() -> None:
-    """Confirma que o fallback de migrations converte URL async para sync."""
+def test_migrations_url_fallback_converts_to_async_driver() -> None:
+    """Confirma que o fallback de migrations mantem driver async compativel."""
     migrations_url = resolve_migrations_database_url("postgresql+asyncpg://user:pass@localhost:5432/app")
 
-    assert migrations_url.startswith("postgresql://")
+    assert migrations_url.startswith("postgresql+asyncpg://")
 
 
 def test_migrations_url_prefers_explicit_dedicated_value() -> None:
@@ -28,7 +28,7 @@ def test_migrations_url_prefers_explicit_dedicated_value() -> None:
         database_url_migrations="postgresql://admin:secret@localhost:5432/app",
     )
 
-    assert migrations_url == "postgresql://admin:secret@localhost:5432/app"
+    assert migrations_url == "postgresql+asyncpg://admin:secret@localhost:5432/app"
 
 
 def test_managed_provider_url_receives_sslmode_when_missing() -> None:

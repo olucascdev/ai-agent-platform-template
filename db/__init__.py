@@ -19,7 +19,7 @@ def get_async_session():
     """Wrapper lazy para evitar import ciclico durante bootstrap de configuracao."""
     from db.session import get_async_session as _get_async_session
 
-    return _get_async_session
+    return _get_async_session()
 
 
 def get_async_session_local():

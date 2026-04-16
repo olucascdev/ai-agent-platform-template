@@ -59,5 +59,5 @@ def test_settings_expose_runtime_and_migration_database_urls(monkeypatch: pytest
 
     assert loaded_settings.runtime_database_url.startswith("postgresql+asyncpg://")
     assert "sslmode=require" in loaded_settings.runtime_database_url
-    assert loaded_settings.migrations_database_url.startswith("postgresql://")
+    assert loaded_settings.migrations_database_url.startswith("postgresql+asyncpg://")
     assert loaded_settings.sqlalchemy_engine_kwargs["pool_pre_ping"] is True
