@@ -31,6 +31,14 @@ class Settings(BaseSettings):
     database_url_migrations: str | None = None
     crm_base_url: str = Field(min_length=1)
     crm_token: str = Field(min_length=1)
+    crm_contacts_lookup_path: str = Field(default="/contacts", min_length=1)
+    crm_lookup_phone_param: str = Field(default="phone", min_length=1)
+    crm_lookup_phone_value_template: str = Field(default="{phone}", min_length=1)
+    crm_lookup_service_id_param: str = Field(default="serviceId", min_length=1)
+    crm_service_id: str | None = None
+    crm_transfer_path_template: str = Field(default="/contacts/{contact_id}/ticket/transfer", min_length=1)
+    crm_auth_header_name: str = Field(default="Authorization", min_length=1)
+    crm_auth_header_prefix: str = Field(default="Bearer")
     whatsapp_sender_url: str = Field(min_length=1)
     whatsapp_token: str = Field(min_length=1)
     agent_name: str = Field(min_length=1)

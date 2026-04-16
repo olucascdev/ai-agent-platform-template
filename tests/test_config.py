@@ -25,6 +25,13 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.http_timeout_seconds == 10.0
     assert loaded_settings.http_max_retries == 2
     assert loaded_settings.http_retry_backoff_seconds == 0.5
+    assert loaded_settings.crm_contacts_lookup_path == "/contacts"
+    assert loaded_settings.crm_lookup_phone_param == "phone"
+    assert loaded_settings.crm_lookup_phone_value_template == "{phone}"
+    assert loaded_settings.crm_lookup_service_id_param == "serviceId"
+    assert loaded_settings.crm_transfer_path_template == "/contacts/{contact_id}/ticket/transfer"
+    assert loaded_settings.crm_auth_header_name == "Authorization"
+    assert loaded_settings.crm_auth_header_prefix == "Bearer"
 
 
 def test_settings_fail_when_required_value_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:
