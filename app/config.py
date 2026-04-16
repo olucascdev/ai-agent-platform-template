@@ -6,6 +6,12 @@ from pathlib import Path
 from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from db.url import (
+    build_sqlalchemy_engine_kwargs,
+    resolve_migrations_database_url,
+    resolve_runtime_database_url,
+)
+
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
 PROMPT_FILES_ORDER = (
     "identity.md",
@@ -22,6 +28,7 @@ class Settings(BaseSettings):
     openai_api_key: str = Field(min_length=1)
     google_api_key: str = Field(min_length=1)
     database_url: str = Field(min_length=1)
+    database_url_migrations: str | None = None
     crm_base_url: str = Field(min_length=1)
     crm_token: str = Field(min_length=1)
     whatsapp_sender_url: str = Field(min_length=1)
@@ -36,6 +43,21 @@ class Settings(BaseSettings):
         extra="ignore",
         case_sensitive=False,
     )
+
+    @property
+    def runtime_database_url(self) -> str:
+        """Retorna URL de runtime normalizada para engine async."""
+        return resolve_runtime_database_url(self.database_url)
+
+    @property
+    def migrations_database_url(self) -> str:
+        """Retorna URL sync para Alembic, com fallback para `DATABASE_URL`."""
+        return resolve_migrations_database_url(self.database_url, self.database_url_migrations)
+
+    @property
+    def sqlalchemy_engine_kwargs(self) -> dict[str, object]:
+        """Retorna configuracoes padrao de engine para conexoes mais estaveis."""
+        return build_sqlalchemy_engine_kwargs(self.runtime_database_url)
 
 
 @lru_cache(maxsize=1)
