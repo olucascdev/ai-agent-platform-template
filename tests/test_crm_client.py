@@ -7,6 +7,7 @@ import httpx
 import pytest
 
 from app.config import settings
+from app.integrations.contracts import IntegrationContractError
 from app.integrations.crm_client import CRMClient, build_crm_client
 from app.integrations.http_client import ResilientHttpClient
 
@@ -109,6 +110,73 @@ async def test_transfer_contact_sends_expected_payload_and_path() -> None:
     assert '"departmentId":"dep-1"' in seen_request["body"]
     assert '"comments":"Lead qualificado e pronto para comercial."' in seen_request["body"]
     assert response_payload == {"status": "queued"}
+
+
+@pytest.mark.asyncio
+async def test_find_contact_by_phone_rejects_empty_phone() -> None:
+    """Falha cedo quando telefone nao e informado no lookup."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json={"data": []})
+
+    client = CRMClient(http_client=_build_http_client(handler))
+
+    with pytest.raises(ValueError) as exc_info:
+        await client.find_contact_by_phone("   ")
+
+    assert "telefone" in str(exc_info.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_transfer_contact_rejects_empty_required_fields() -> None:
+    """Falha cedo quando campos obrigatorios de transferencia estao vazios."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json={"ok": True})
+
+    client = CRMClient(http_client=_build_http_client(handler))
+
+    with pytest.raises(ValueError) as contact_exc:
+        await client.transfer_contact(contact_id=" ", department_id="dep-1", comments="comentario")
+    assert "contact_id" in str(contact_exc.value)
+
+    with pytest.raises(ValueError) as department_exc:
+        await client.transfer_contact(contact_id="c-1", department_id=" ", comments="comentario")
+    assert "department_id" in str(department_exc.value)
+
+    with pytest.raises(ValueError) as comments_exc:
+        await client.transfer_contact(contact_id="c-1", department_id="dep-1", comments=" ")
+    assert "comments" in str(comments_exc.value)
+
+
+@pytest.mark.asyncio
+async def test_find_contact_by_phone_raises_contract_error_for_invalid_data_shape() -> None:
+    """Levanta erro de contrato quando payload de lookup retorna `data` invalido."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json={"data": {"id": "c-1"}})
+
+    client = CRMClient(http_client=_build_http_client(handler))
+
+    with pytest.raises(IntegrationContractError) as exc_info:
+        await client.find_contact_by_phone("+5531999999999")
+
+    assert "campo `data`" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
+async def test_transfer_contact_raises_contract_error_for_non_object_response() -> None:
+    """Levanta erro de contrato quando transferencia retorna lista em vez de objeto."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json=[{"status": "ok"}])
+
+    client = CRMClient(http_client=_build_http_client(handler))
+
+    with pytest.raises(IntegrationContractError) as exc_info:
+        await client.transfer_contact(contact_id="c-1", department_id="dep-1", comments="ok")
+
+    assert "esperado objeto json" in str(exc_info.value).lower()
 
 
 @pytest.mark.asyncio

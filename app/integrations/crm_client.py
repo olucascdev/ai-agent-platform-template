@@ -6,6 +6,7 @@ from typing import Any
 import httpx
 
 from app.config import settings
+from app.integrations.contracts import IntegrationContractError, parse_json_object_payload, parse_json_payload
 from app.integrations.http_client import ResilientHttpClient
 from app.integrations.retry_policy import build_crm_retry_policy
 
@@ -42,8 +43,12 @@ class CRMClient:
 
     async def find_contact_by_phone(self, phone: str) -> CRMContact | None:
         """Busca contato por telefone usando parametros configuraveis."""
+        normalized_phone = phone.strip()
+        if not normalized_phone:
+            raise ValueError("Telefone deve ser informado para busca de contato no CRM.")
+
         params: dict[str, str] = {
-            self._lookup_phone_param: self._lookup_phone_value_template.format(phone=phone),
+            self._lookup_phone_param: self._lookup_phone_value_template.format(phone=normalized_phone),
         }
         if self._service_id:
             params[self._lookup_service_id_param] = self._service_id
@@ -53,31 +58,36 @@ class CRMClient:
             self._contacts_lookup_path,
             params=params,
         )
-        response_payload = self._parse_json_response(response)
+        response_payload = self._parse_lookup_response(response)
         return self._extract_first_contact(response_payload)
 
     async def transfer_contact(self, *, contact_id: str, department_id: str, comments: str) -> dict[str, Any]:
         """Transfere contato para departamento no CRM."""
+        normalized_contact_id = contact_id.strip()
+        normalized_department_id = department_id.strip()
+        normalized_comments = comments.strip()
+
+        if not normalized_contact_id:
+            raise ValueError("contact_id deve ser informado para transferencia no CRM.")
+        if not normalized_department_id:
+            raise ValueError("department_id deve ser informado para transferencia no CRM.")
+        if not normalized_comments:
+            raise ValueError("comments deve ser informado para transferencia no CRM.")
+
         response = await self._http_client.request(
             "POST",
-            self._transfer_path_template.format(contact_id=contact_id),
-            json_body={"departmentId": department_id, "comments": comments},
+            self._transfer_path_template.format(contact_id=normalized_contact_id),
+            json_body={"departmentId": normalized_department_id, "comments": normalized_comments},
         )
 
-        return self._parse_json_response(response)
+        return parse_json_object_payload(response, integration_name="crm.transfer")
 
-    def _parse_json_response(self, response: Any) -> dict[str, Any]:
-        if not response.content:
-            return {}
-
-        payload = response.json()
+    def _parse_lookup_response(self, response: Any) -> dict[str, Any]:
+        payload = parse_json_payload(response, integration_name="crm.lookup")
         if isinstance(payload, dict):
             return payload
 
-        if isinstance(payload, list):
-            return {"data": payload}
-
-        return {"data": []}
+        return {"data": payload}
 
     def _extract_first_contact(self, payload: dict[str, Any]) -> CRMContact | None:
         if "id" in payload:
@@ -85,16 +95,23 @@ class CRMClient:
             return CRMContact(contact_id=contact_id, raw=payload)
 
         contacts = payload.get("data")
-        if not isinstance(contacts, list) or not contacts:
+        if contacts is None:
+            return None
+
+        if not isinstance(contacts, list):
+            raise IntegrationContractError("Resposta de lookup CRM invalida: campo `data` deve ser lista.")
+        if not contacts:
             return None
 
         first_contact = contacts[0]
         if not isinstance(first_contact, dict):
-            return None
+            raise IntegrationContractError("Resposta de lookup CRM invalida: primeiro item de `data` nao e objeto.")
 
         contact_id_value = first_contact.get("id") or first_contact.get("contactId")
         if contact_id_value is None:
-            return None
+            raise IntegrationContractError(
+                "Resposta de lookup CRM invalida: contato retornado sem `id` ou `contactId`."
+            )
 
         return CRMContact(contact_id=str(contact_id_value), raw=first_contact)
 

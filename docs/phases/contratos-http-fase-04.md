@@ -87,3 +87,9 @@ Consolidar os contratos de request/response das integracoes HTTP do template par
 
 - Headers sensiveis sao redigidos (`<redacted>`) nos logs do cliente HTTP.
 - Tokens nao devem ser hardcoded no codigo; sempre via variaveis de ambiente.
+
+## Validacao de contrato em runtime
+
+- A aplicacao valida payloads HTTP com utilitarios centralizados em `app/integrations/contracts.py`.
+- Quando o provider retorna payload fora do contrato esperado, e levantado `IntegrationContractError`.
+- O objetivo e falhar de forma explicita e rastreavel, evitando seguir o fluxo com dados inconsistentes.

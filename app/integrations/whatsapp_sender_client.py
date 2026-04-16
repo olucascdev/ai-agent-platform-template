@@ -7,6 +7,7 @@ from urllib.parse import urlsplit
 import httpx
 
 from app.config import settings
+from app.integrations.contracts import parse_json_payload
 from app.integrations.http_client import ResilientHttpClient
 from app.integrations.retry_policy import build_whatsapp_sender_retry_policy
 
@@ -39,26 +40,27 @@ class WhatsAppSenderClient:
 
     async def send_text(self, *, phone: str, text: str) -> WhatsAppSendResult:
         """Envia mensagem de texto para numero de telefone informado."""
+        normalized_phone = phone.strip()
+        normalized_text = text.strip()
+        if not normalized_phone:
+            raise ValueError("Telefone deve ser informado para envio de mensagem no sender WhatsApp.")
+        if not normalized_text:
+            raise ValueError("Texto deve ser informado para envio de mensagem no sender WhatsApp.")
+
         response = await self._http_client.request(
             self._method,
             self._send_path,
-            json_body={self._number_field: phone, self._text_field: text},
+            json_body={self._number_field: normalized_phone, self._text_field: normalized_text},
         )
 
         return WhatsAppSendResult(status_code=response.status_code, payload=self._parse_json_response(response))
 
     def _parse_json_response(self, response: httpx.Response) -> dict[str, Any]:
-        if not response.content:
-            return {}
-
-        payload = response.json()
+        payload = parse_json_payload(response, integration_name="whatsapp_sender.send_text")
         if isinstance(payload, dict):
             return payload
 
-        if isinstance(payload, list):
-            return {"data": payload}
-
-        return {"data": []}
+        return {"data": payload}
 
 
 def _split_sender_url(url: str) -> tuple[str, str]:

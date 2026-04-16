@@ -7,6 +7,7 @@ import httpx
 import pytest
 
 from app.config import settings
+from app.integrations.contracts import IntegrationContractError
 from app.integrations.http_client import ResilientHttpClient
 from app.integrations.whatsapp_sender_client import (
     WhatsAppSenderClient,
@@ -97,6 +98,39 @@ async def test_sender_client_returns_empty_payload_for_empty_response_body() -> 
 
     assert result.status_code == 204
     assert result.payload == {}
+
+
+@pytest.mark.asyncio
+async def test_sender_client_rejects_empty_phone_or_text() -> None:
+    """Falha cedo quando telefone ou texto estao vazios."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json={"ok": True})
+
+    client = WhatsAppSenderClient(http_client=_build_http_client(handler), send_path="/send/text")
+
+    with pytest.raises(ValueError) as phone_exc:
+        await client.send_text(phone="   ", text="mensagem")
+    assert "telefone" in str(phone_exc.value).lower()
+
+    with pytest.raises(ValueError) as text_exc:
+        await client.send_text(phone="+5531999999999", text="   ")
+    assert "texto" in str(text_exc.value).lower()
+
+
+@pytest.mark.asyncio
+async def test_sender_client_raises_contract_error_for_primitive_json_response() -> None:
+    """Levanta erro de contrato quando provider retorna tipo JSON nao suportado."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json=123)
+
+    client = WhatsAppSenderClient(http_client=_build_http_client(handler), send_path="/send/text")
+
+    with pytest.raises(IntegrationContractError) as exc_info:
+        await client.send_text(phone="+5531999999999", text="ok")
+
+    assert "tipo de payload nao suportado" in str(exc_info.value).lower()
 
 
 def test_split_sender_url_supports_path_and_query_string() -> None:

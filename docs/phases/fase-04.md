@@ -46,6 +46,13 @@
 - Testes de integracao simulada adicionados para fluxo ponta a ponta (lookup, transferencia e envio).
 - Validacao automatizada adicionada para diferenca de politica de retry entre CRM e sender.
 
+### Feature 4.6 - validacao de contrato por adapter em runtime
+
+- Camada dedicada de validacao de payload HTTP implementada para CRM e sender.
+- Erros de contrato agora sao explicitados por `IntegrationContractError` para facilitar diagnostico.
+- Validacoes de entrada obrigatoria adicionadas nos clients para evitar requests invalidos.
+- Cobertura automatizada adicionada para cenarios de payload invalido e campos obrigatorios ausentes.
+
 ## Proximas features da fase
 
 - Nenhuma. Fase 4 finalizada.

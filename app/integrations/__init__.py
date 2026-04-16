@@ -1,5 +1,6 @@
 """Integracoes externas e utilitarios HTTP compartilhados."""
 
+from app.integrations.contracts import IntegrationContractError, parse_json_object_payload, parse_json_payload
 from app.integrations.crm_client import CRMClient, CRMContact, build_crm_client
 from app.integrations.http_client import (
     HttpClientError,
@@ -26,6 +27,7 @@ __all__ = [
     "HttpClientError",
     "HttpClientRequestError",
     "HttpClientResponseError",
+    "IntegrationContractError",
     "CRM_RETRY_STATUS_CODES",
     "ResilientHttpClient",
     "RetryPolicy",
@@ -36,4 +38,6 @@ __all__ = [
     "build_crm_retry_policy",
     "build_whatsapp_sender_client",
     "build_whatsapp_sender_retry_policy",
+    "parse_json_object_payload",
+    "parse_json_payload",
 ]
