@@ -1,51 +1,30 @@
-"""
-Database Session
-----------------
+"""Sessao async do SQLAlchemy com configuracao compartilhada da aplicacao."""
 
-PostgreSQL database connection for AgentOS.
-"""
+from collections.abc import AsyncGenerator
 
-from agno.db.postgres import PostgresDb
-from agno.knowledge import Knowledge
-from agno.knowledge.embedder.openai import OpenAIEmbedder
-from agno.vectordb.pgvector import PgVector, SearchType
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
-from db.url import db_url
+from app.config import settings
 
-DB_ID = "agentos-db"
+DEFAULT_ENGINE_KWARGS = settings.sqlalchemy_engine_kwargs
 
 
-def get_postgres_db(contents_table: str | None = None) -> PostgresDb:
-    """Create a PostgresDb instance.
-
-    Args:
-        contents_table: Optional table name for storing knowledge contents.
-
-    Returns:
-        Configured PostgresDb instance.
-    """
-    if contents_table is not None:
-        return PostgresDb(id=DB_ID, db_url=db_url, knowledge_table=contents_table)
-    return PostgresDb(id=DB_ID, db_url=db_url)
+def create_async_engine_for_runtime() -> AsyncEngine:
+    """Cria engine async principal usando a URL normalizada do runtime."""
+    return create_async_engine(settings.runtime_database_url, **DEFAULT_ENGINE_KWARGS)
 
 
-def create_knowledge(name: str, table_name: str) -> Knowledge:
-    """Create a Knowledge instance with PgVector hybrid search.
+async_engine = create_async_engine_for_runtime()
 
-    Args:
-        name: Display name for the knowledge base.
-        table_name: PostgreSQL table name for vector storage.
+# Fabrica padrao de sessoes assicronas usada por services e repositorios.
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
 
-    Returns:
-        Configured Knowledge instance.
-    """
-    return Knowledge(
-        name=name,
-        vector_db=PgVector(
-            db_url=db_url,
-            table_name=table_name,
-            search_type=SearchType.hybrid,
-            embedder=OpenAIEmbedder(id="text-embedding-3-small"),
-        ),
-        contents_db=get_postgres_db(contents_table=f"{table_name}_contents"),
-    )
+
+async def get_async_session() -> AsyncGenerator[AsyncSession, None]:
+    """Fornece sessao async por request/escopo e garante fechamento ao final."""
+    async with AsyncSessionLocal() as session:
+        yield session
