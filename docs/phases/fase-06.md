@@ -2,7 +2,7 @@
 
 ## Status
 
-- Em andamento.
+- Concluida.
 
 ## Features concluidas
 
@@ -28,7 +28,20 @@
 - Roteamento de transferencia para departamentos por regra (humano, financeiro, suporte e comercial).
 - Cobertura automatizada adicionada para cenarios de FAQ, qualificacao e pedido de humano.
 
+### Feature 6.4 - geracao de comments estruturados para handoff humano
+
+- Gerador de comments estruturados implementado para payload de transferencia no CRM.
+- Contrato tipado adicionado para consolidar contexto de contato, sessao e decisao conversacional.
+- Formato deterministico chave=valor definido para facilitar leitura operacional e auditoria.
+- Cobertura automatizada adicionada para contrato de comment e cenario sem transferencia ativa.
+
+### Feature 6.5 - guardrails de resposta (limites, tom, proibicoes)
+
+- Camada de guardrails implementada para resposta final do agente antes de envio ao canal.
+- Bloqueios adicionados para resposta vazia, exposicao de credencial e linguagem ofensiva.
+- Ajustes de tom e limite de tamanho aplicados com retorno estruturado de violacoes.
+- Cobertura automatizada adicionada para bloqueio, transformacao e fluxo seguro sem alteracao.
+
 ## Proximas features da fase
 
-- Feature 6.4 - geracao de comments estruturados para handoff humano.
-- Feature 6.5 - guardrails de resposta (limites, tom, proibicoes).
+- Nenhuma. Fase 6 finalizada.

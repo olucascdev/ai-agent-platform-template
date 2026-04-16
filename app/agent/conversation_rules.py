@@ -1,6 +1,7 @@
 """Regras backend de FAQ, qualificacao e transferencia por departamento."""
 
 from dataclasses import dataclass
+import re
 import unicodedata
 from typing import Literal
 
@@ -237,7 +238,16 @@ def _resolve_next_qualification_question(missing_fields: list[str]) -> str | Non
 
 
 def _contains_any_keyword(message: str, keywords: tuple[str, ...]) -> bool:
-    return any(keyword in message for keyword in keywords)
+    for keyword in keywords:
+        normalized_keyword = keyword.strip().lower()
+        if not normalized_keyword:
+            continue
+
+        keyword_pattern = rf"(?<!\w){re.escape(normalized_keyword)}(?!\w)"
+        if re.search(keyword_pattern, message):
+            return True
+
+    return False
 
 
 def _normalize_message(value: str) -> str:
