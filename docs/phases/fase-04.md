@@ -25,8 +25,15 @@
 - Compatibilidade adicionada para formatos de resposta comuns (`data[]` e objeto unico com `id`).
 - Cobertura automatizada adicionada para contrato do cliente CRM.
 
+### Feature 4.3 - cliente sender WhatsApp configuravel
+
+- `WhatsAppSenderClient` implementado para envio de texto com contrato HTTP configuravel.
+- Factory `build_whatsapp_sender_client()` adicionada para inicializar o sender com settings centralizados.
+- URL completa do sender agora suportada com parse de base + path + query.
+- Contratos de autenticacao e payload do sender tornados configuraveis por ambiente.
+- Cobertura automatizada adicionada para contrato do sender e cenarios de configuracao.
+
 ## Proximas features da fase
 
-- Feature 4.3 - adapter de sender WhatsApp configuravel por cliente.
 - Feature 4.4 - consolidacao de politica de erro/retry por tipo de integracao.
 - Feature 4.5 - fechamento de contratos HTTP e testes de integracao simulada.

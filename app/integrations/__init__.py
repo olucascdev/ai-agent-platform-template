@@ -7,6 +7,11 @@ from app.integrations.http_client import (
     HttpClientResponseError,
     ResilientHttpClient,
 )
+from app.integrations.whatsapp_sender_client import (
+    WhatsAppSendResult,
+    WhatsAppSenderClient,
+    build_whatsapp_sender_client,
+)
 
 __all__ = [
     "CRMClient",
@@ -15,5 +20,8 @@ __all__ = [
     "HttpClientRequestError",
     "HttpClientResponseError",
     "ResilientHttpClient",
+    "WhatsAppSendResult",
+    "WhatsAppSenderClient",
     "build_crm_client",
+    "build_whatsapp_sender_client",
 ]
