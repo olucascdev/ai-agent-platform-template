@@ -27,6 +27,12 @@
 - Helpers dedicados adicionados para resolver URL de migration e metadata.
 - Testes adicionados para configuracao do Alembic e contrato da migration.
 
+### Feature 3.4 - implementacao do lead service
+
+- `LeadService` implementado com metodos `upsert` e `get_by_phone`.
+- Fluxo de upsert com `ON CONFLICT DO NOTHING` e update de `session_id` aplicado.
+- Testes adicionados para sequencia de statements e comportamento esperado.
+
 ## Proximas features da fase
 
-- Feature 3.4: implementacao do `lead_service`.
+- Nenhuma. Fase 3 finalizada.
