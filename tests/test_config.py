@@ -41,6 +41,10 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.audio_transcription_model == "whisper-1"
     assert loaded_settings.audio_transcription_language is None
     assert loaded_settings.audio_download_timeout_seconds == 20.0
+    assert loaded_settings.image_analysis_provider == "google"
+    assert loaded_settings.image_analysis_model == "models/gemini-2.0-flash-lite"
+    assert loaded_settings.image_analysis_prompt == "Descreva a imagem e extraia o texto visivel de forma organizada."
+    assert loaded_settings.image_download_timeout_seconds == 20.0
 
 
 def test_settings_fail_when_required_value_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:

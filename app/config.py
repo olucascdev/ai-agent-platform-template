@@ -56,6 +56,10 @@ class Settings(BaseSettings):
     audio_transcription_model: str = Field(default="whisper-1", min_length=1)
     audio_transcription_language: str | None = None
     audio_download_timeout_seconds: float = Field(default=20.0, gt=0)
+    image_analysis_provider: str = Field(default="google", min_length=1)
+    image_analysis_model: str = Field(default="models/gemini-2.0-flash-lite", min_length=1)
+    image_analysis_prompt: str = Field(default="Descreva a imagem e extraia o texto visivel de forma organizada.")
+    image_download_timeout_seconds: float = Field(default=20.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

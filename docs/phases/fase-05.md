@@ -22,9 +22,16 @@
 - Erros de download/transcricao mapeados para excecoes de dominio da feature.
 - Cobertura automatizada adicionada para contrato do provider e cenarios de falha.
 
+### Feature 5.3 - analise de imagem com provider configuravel
+
+- Fluxo de analise de imagem implementado com provider selecionado por configuracao.
+- Provider Google/Gemini implementado com model e prompt configuraveis.
+- Contexto textual do evento pode ser incluido no prompt de analise.
+- Validacoes fail-fast adicionadas para anexo de imagem ausente ou sem URL valida.
+- Cobertura automatizada adicionada para contrato do provider, fallback e cenarios de falha.
+
 ## Proximas features da fase
 
-- Feature 5.3 - analise de imagem (extracao textual/contextual).
 - Feature 5.4 - processamento de PDF (quando aplicavel).
 - Feature 5.5 - composer final de contexto para agente.
 - Feature 5.6 - fallback seguro para falhas de midia/provider.
