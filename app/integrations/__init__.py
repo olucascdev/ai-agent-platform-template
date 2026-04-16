@@ -7,6 +7,13 @@ from app.integrations.http_client import (
     HttpClientResponseError,
     ResilientHttpClient,
 )
+from app.integrations.retry_policy import (
+    CRM_RETRY_STATUS_CODES,
+    WHATSAPP_SENDER_RETRY_STATUS_CODES,
+    RetryPolicy,
+    build_crm_retry_policy,
+    build_whatsapp_sender_retry_policy,
+)
 from app.integrations.whatsapp_sender_client import (
     WhatsAppSendResult,
     WhatsAppSenderClient,
@@ -19,9 +26,14 @@ __all__ = [
     "HttpClientError",
     "HttpClientRequestError",
     "HttpClientResponseError",
+    "CRM_RETRY_STATUS_CODES",
     "ResilientHttpClient",
+    "RetryPolicy",
+    "WHATSAPP_SENDER_RETRY_STATUS_CODES",
     "WhatsAppSendResult",
     "WhatsAppSenderClient",
     "build_crm_client",
+    "build_crm_retry_policy",
     "build_whatsapp_sender_client",
+    "build_whatsapp_sender_retry_policy",
 ]

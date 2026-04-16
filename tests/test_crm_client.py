@@ -6,7 +6,8 @@ from typing import Any
 import httpx
 import pytest
 
-from app.integrations.crm_client import CRMClient
+from app.config import settings
+from app.integrations.crm_client import CRMClient, build_crm_client
 from app.integrations.http_client import ResilientHttpClient
 
 
@@ -108,3 +109,38 @@ async def test_transfer_contact_sends_expected_payload_and_path() -> None:
     assert '"departmentId":"dep-1"' in seen_request["body"]
     assert '"comments":"Lead qualificado e pronto para comercial."' in seen_request["body"]
     assert response_payload == {"status": "queued"}
+
+
+@pytest.mark.asyncio
+async def test_build_crm_client_retries_on_policy_status_408(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Garante aplicacao da politica de retry do CRM para status 408."""
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(status_code=408, request=request, json={"error": "timeout"})
+
+        return httpx.Response(status_code=200, request=request, json={"data": [{"id": "c-321"}]})
+
+    monkeypatch.setattr(settings, "crm_base_url", "https://crm.example.com/api/v1")
+    monkeypatch.setattr(settings, "crm_token", "crm-token")
+    monkeypatch.setattr(settings, "crm_auth_header_name", "Authorization")
+    monkeypatch.setattr(settings, "crm_auth_header_prefix", "Bearer")
+    monkeypatch.setattr(settings, "crm_contacts_lookup_path", "/contacts")
+    monkeypatch.setattr(settings, "crm_lookup_phone_param", "phone")
+    monkeypatch.setattr(settings, "crm_lookup_phone_value_template", "{phone}")
+    monkeypatch.setattr(settings, "crm_lookup_service_id_param", "serviceId")
+    monkeypatch.setattr(settings, "crm_service_id", None)
+    monkeypatch.setattr(settings, "crm_transfer_path_template", "/contacts/{contact_id}/ticket/transfer")
+    monkeypatch.setattr(settings, "http_timeout_seconds", 5.0)
+    monkeypatch.setattr(settings, "http_max_retries", 1)
+    monkeypatch.setattr(settings, "http_retry_backoff_seconds", 0.0)
+
+    client = build_crm_client(transport=httpx.MockTransport(handler))
+    contact = await client.find_contact_by_phone("+5531555555555")
+
+    assert attempts == 2
+    assert contact is not None
+    assert contact.contact_id == "c-321"

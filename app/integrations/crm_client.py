@@ -3,8 +3,11 @@
 from dataclasses import dataclass
 from typing import Any
 
+import httpx
+
 from app.config import settings
 from app.integrations.http_client import ResilientHttpClient
+from app.integrations.retry_policy import build_crm_retry_policy
 
 
 @dataclass(slots=True)
@@ -96,18 +99,25 @@ class CRMClient:
         return CRMContact(contact_id=str(contact_id_value), raw=first_contact)
 
 
-def build_crm_client() -> CRMClient:
+def build_crm_client(*, transport: httpx.AsyncBaseTransport | None = None) -> CRMClient:
     """Monta cliente CRM com configuracoes centralizadas do ambiente."""
     auth_value = settings.crm_token
     if settings.crm_auth_header_prefix.strip():
         auth_value = f"{settings.crm_auth_header_prefix.strip()} {settings.crm_token}"
 
+    retry_policy = build_crm_retry_policy(
+        max_retries=settings.http_max_retries,
+        retry_backoff_seconds=settings.http_retry_backoff_seconds,
+    )
+
     http_client = ResilientHttpClient(
         base_url=settings.crm_base_url,
         default_headers={settings.crm_auth_header_name: auth_value},
         timeout_seconds=settings.http_timeout_seconds,
-        max_retries=settings.http_max_retries,
-        retry_backoff_seconds=settings.http_retry_backoff_seconds,
+        max_retries=retry_policy.max_retries,
+        retry_backoff_seconds=retry_policy.retry_backoff_seconds,
+        retry_status_codes=retry_policy.retry_status_codes,
+        transport=transport,
     )
 
     return CRMClient(

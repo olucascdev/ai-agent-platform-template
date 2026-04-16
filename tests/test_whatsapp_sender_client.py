@@ -144,3 +144,34 @@ async def test_build_sender_client_uses_settings_for_auth_and_fields(monkeypatch
     assert '"number":"+5531666666666"' in seen_request["body"]
     assert '"text":"Teste sender"' in seen_request["body"]
     assert result.payload == {"id": "msg-1"}
+
+
+@pytest.mark.asyncio
+async def test_build_sender_client_retries_on_policy_status_425(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Garante aplicacao da politica de retry do sender para status 425."""
+    attempts = 0
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        nonlocal attempts
+        attempts += 1
+        if attempts == 1:
+            return httpx.Response(status_code=425, request=request, json={"error": "too early"})
+
+        return httpx.Response(status_code=200, request=request, json={"id": "msg-44"})
+
+    monkeypatch.setattr(settings, "whatsapp_sender_url", "https://sender.example.com/send/text")
+    monkeypatch.setattr(settings, "whatsapp_sender_method", "POST")
+    monkeypatch.setattr(settings, "whatsapp_sender_number_field", "number")
+    monkeypatch.setattr(settings, "whatsapp_sender_text_field", "text")
+    monkeypatch.setattr(settings, "whatsapp_sender_auth_header_name", "Authorization")
+    monkeypatch.setattr(settings, "whatsapp_sender_auth_header_prefix", "Bearer")
+    monkeypatch.setattr(settings, "whatsapp_token", "sender-token")
+    monkeypatch.setattr(settings, "http_timeout_seconds", 5.0)
+    monkeypatch.setattr(settings, "http_max_retries", 1)
+    monkeypatch.setattr(settings, "http_retry_backoff_seconds", 0.0)
+
+    client = build_whatsapp_sender_client(transport=httpx.MockTransport(handler))
+    result = await client.send_text(phone="+5531444444444", text="mensagem")
+
+    assert attempts == 2
+    assert result.payload == {"id": "msg-44"}

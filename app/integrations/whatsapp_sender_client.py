@@ -8,6 +8,7 @@ import httpx
 
 from app.config import settings
 from app.integrations.http_client import ResilientHttpClient
+from app.integrations.retry_policy import build_whatsapp_sender_retry_policy
 
 
 @dataclass(slots=True)
@@ -80,13 +81,19 @@ def build_whatsapp_sender_client(*, transport: httpx.AsyncBaseTransport | None =
     if settings.whatsapp_sender_auth_header_prefix.strip():
         auth_value = f"{settings.whatsapp_sender_auth_header_prefix.strip()} {settings.whatsapp_token}"
 
+    retry_policy = build_whatsapp_sender_retry_policy(
+        max_retries=settings.http_max_retries,
+        retry_backoff_seconds=settings.http_retry_backoff_seconds,
+    )
+
     base_url, send_path = _split_sender_url(settings.whatsapp_sender_url)
     http_client = ResilientHttpClient(
         base_url=base_url,
         default_headers={settings.whatsapp_sender_auth_header_name: auth_value},
         timeout_seconds=settings.http_timeout_seconds,
-        max_retries=settings.http_max_retries,
-        retry_backoff_seconds=settings.http_retry_backoff_seconds,
+        max_retries=retry_policy.max_retries,
+        retry_backoff_seconds=retry_policy.retry_backoff_seconds,
+        retry_status_codes=retry_policy.retry_status_codes,
         transport=transport,
     )
 

@@ -2,7 +2,7 @@
 
 ## Status
 
-- Em andamento.
+- Concluida.
 
 ## Features concluidas
 
@@ -33,7 +33,19 @@
 - Contratos de autenticacao e payload do sender tornados configuraveis por ambiente.
 - Cobertura automatizada adicionada para contrato do sender e cenarios de configuracao.
 
+### Feature 4.4 - politica de erro/retry por integracao
+
+- Politicas de retry consolidadas em modulo dedicado (`retry_policy.py`).
+- Contratos de status retryavel separados por tipo de integracao (CRM e sender WhatsApp).
+- Builders de CRM e sender passaram a usar politicas padronizadas, mantendo configuracao global de retries/backoff.
+- Cobertura automatizada adicionada para contrato das politicas e cenarios de retry especificos por integracao.
+
+### Feature 4.5 - fechamento de contratos HTTP e testes de integracao simulada
+
+- Contratos HTTP de CRM e sender consolidados em documentacao tecnica da fase.
+- Testes de integracao simulada adicionados para fluxo ponta a ponta (lookup, transferencia e envio).
+- Validacao automatizada adicionada para diferenca de politica de retry entre CRM e sender.
+
 ## Proximas features da fase
 
-- Feature 4.4 - consolidacao de politica de erro/retry por tipo de integracao.
-- Feature 4.5 - fechamento de contratos HTTP e testes de integracao simulada.
+- Nenhuma. Fase 4 finalizada.
