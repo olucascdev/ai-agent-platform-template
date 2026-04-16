@@ -30,8 +30,15 @@
 - Validacoes fail-fast adicionadas para anexo de imagem ausente ou sem URL valida.
 - Cobertura automatizada adicionada para contrato do provider, fallback e cenarios de falha.
 
+### Feature 5.4 - processamento de PDF com provider configuravel
+
+- Fluxo de processamento de PDF implementado com provider selecionado por configuracao.
+- Provider pypdf implementado com limite de paginas configuravel.
+- Validacoes fail-fast adicionadas para anexo PDF ausente ou sem URL valida.
+- Erros de download/processamento mapeados para excecoes de dominio da feature.
+- Cobertura automatizada adicionada para extracao textual, limites e cenarios de falha.
+
 ## Proximas features da fase
 
-- Feature 5.4 - processamento de PDF (quando aplicavel).
 - Feature 5.5 - composer final de contexto para agente.
 - Feature 5.6 - fallback seguro para falhas de midia/provider.

@@ -60,6 +60,9 @@ class Settings(BaseSettings):
     image_analysis_model: str = Field(default="models/gemini-2.0-flash-lite", min_length=1)
     image_analysis_prompt: str = Field(default="Descreva a imagem e extraia o texto visivel de forma organizada.")
     image_download_timeout_seconds: float = Field(default=20.0, gt=0)
+    pdf_processing_provider: str = Field(default="pypdf", min_length=1)
+    pdf_processing_max_pages: int = Field(default=20, ge=1)
+    pdf_download_timeout_seconds: float = Field(default=20.0, gt=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

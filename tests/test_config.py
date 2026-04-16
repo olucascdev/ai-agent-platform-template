@@ -45,6 +45,9 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.image_analysis_model == "models/gemini-2.0-flash-lite"
     assert loaded_settings.image_analysis_prompt == "Descreva a imagem e extraia o texto visivel de forma organizada."
     assert loaded_settings.image_download_timeout_seconds == 20.0
+    assert loaded_settings.pdf_processing_provider == "pypdf"
+    assert loaded_settings.pdf_processing_max_pages == 20
+    assert loaded_settings.pdf_download_timeout_seconds == 20.0
 
 
 def test_settings_fail_when_required_value_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:

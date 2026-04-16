@@ -22,6 +22,17 @@ from app.preprocessing.image_analysis import (
     analyze_image_event,
     build_image_analyzer,
 )
+from app.preprocessing.pdf_processing import (
+    PdfAttachmentNotFoundError,
+    PdfDownloadError,
+    PdfProcessing,
+    PdfProcessingError,
+    PdfProcessor,
+    PyPdfProcessor,
+    UnsupportedPdfProcessingProviderError,
+    build_pdf_processor,
+    process_pdf_event,
+)
 from app.preprocessing.event_normalizer import (
     EventNormalizationError,
     NormalizedAttachment,
@@ -45,11 +56,20 @@ __all__ = [
     "NormalizedAttachment",
     "NormalizedIncomingEvent",
     "OpenAIAudioTranscriber",
+    "PdfAttachmentNotFoundError",
+    "PdfDownloadError",
+    "PdfProcessing",
+    "PdfProcessingError",
+    "PdfProcessor",
+    "PyPdfProcessor",
     "UnsupportedImageAnalysisProviderError",
+    "UnsupportedPdfProcessingProviderError",
     "UnsupportedAudioTranscriptionProviderError",
     "analyze_image_event",
     "build_audio_transcriber",
     "build_image_analyzer",
+    "build_pdf_processor",
     "normalize_incoming_event",
+    "process_pdf_event",
     "transcribe_audio_event",
 ]
