@@ -23,6 +23,9 @@ class EnvExampleTemplateTests(unittest.TestCase):
             "AGENT_NAME",
             "AGENT_SESSION_PREFIX",
             "MESSAGE_DELAY_SECONDS",
+            "HTTP_TIMEOUT_SECONDS",
+            "HTTP_MAX_RETRIES",
+            "HTTP_RETRY_BACKOFF_SECONDS",
         }
 
         parsed_keys = {

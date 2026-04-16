@@ -36,6 +36,9 @@ class Settings(BaseSettings):
     agent_name: str = Field(min_length=1)
     agent_session_prefix: str = Field(min_length=1)
     message_delay_seconds: int = Field(default=3, ge=0)
+    http_timeout_seconds: float = Field(default=10.0, gt=0)
+    http_max_retries: int = Field(default=2, ge=0)
+    http_retry_backoff_seconds: float = Field(default=0.5, ge=0)
 
     model_config = SettingsConfigDict(
         env_file=".env",

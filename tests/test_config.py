@@ -22,6 +22,9 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     loaded_settings = Settings(_env_file=None)
 
     assert loaded_settings.message_delay_seconds == 3
+    assert loaded_settings.http_timeout_seconds == 10.0
+    assert loaded_settings.http_max_retries == 2
+    assert loaded_settings.http_retry_backoff_seconds == 0.5
 
 
 def test_settings_fail_when_required_value_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:
