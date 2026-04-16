@@ -2,37 +2,63 @@
 
 ## Status
 
-- Em andamento.
+- Concluida.
 
-## Features concluidas
+## Consolidado da fase
 
-### Feature 3.1 - estrategia de conexao multi-provider
+- Estrategia de conexao multi-provider implementada para Postgres local, Supabase e NeonDB.
+- Camada async SQLAlchemy concluida com modelo `Lead` e sessao padrao (`async_engine`, `AsyncSessionLocal`, `get_async_session`).
+- Alembic configurado com migration inicial da tabela `leads`.
+- `LeadService` implementado com `upsert` idempotente e `get_by_phone`.
 
-- Contrato de URLs separado para runtime e migrations.
-- Compatibilidade com Supabase, Neon e Postgres local.
-- Fallback de URL sync implementado para Alembic.
-- Testes cobrindo normalizacao, SSL e configuracao de engine.
+## Matriz de suporte (DSN)
 
-### Feature 3.2 - base async e modelo de leads
+### Postgres local
 
-- Base declarativa SQLAlchemy criada.
-- Modelo `Lead` criado com unicidade por telefone e timestamps.
-- Sessao async (`async_engine`, `AsyncSessionLocal`, `get_async_session`) implementada.
-- Testes adicionados para modelo e camada de sessao.
+```env
+DATABASE_URL=postgresql+asyncpg://ai:ai@localhost:5432/ai
+# Opcional: URL dedicada para migrations
+DATABASE_URL_MIGRATIONS=postgresql+asyncpg://ai:ai@localhost:5432/ai
+```
 
-### Feature 3.3 - setup Alembic e migration inicial
+### Supabase
 
-- Estrutura Alembic criada e configurada para migrations com asyncpg.
-- Migration inicial criada para tabela `leads`.
-- Helpers dedicados adicionados para resolver URL de migration e metadata.
-- Testes adicionados para configuracao do Alembic e contrato da migration.
+```env
+DATABASE_URL=postgresql+asyncpg://postgres:[SENHA]@db.[PROJECT-REF].supabase.co:5432/postgres
+# Opcional: usar conexao dedicada para migrations
+DATABASE_URL_MIGRATIONS=postgresql+asyncpg://postgres:[SENHA]@db.[PROJECT-REF].supabase.co:5432/postgres
+```
 
-### Feature 3.4 - implementacao do lead service
+### NeonDB
 
-- `LeadService` implementado com metodos `upsert` e `get_by_phone`.
-- Fluxo de upsert com `ON CONFLICT DO NOTHING` e update de `session_id` aplicado.
-- Testes adicionados para sequencia de statements e comportamento esperado.
+```env
+DATABASE_URL=postgresql+asyncpg://[USER]:[SENHA]@[ENDPOINT].neon.tech:5432/[DATABASE]
+# Opcional: usar conexao dedicada para migrations
+DATABASE_URL_MIGRATIONS=postgresql+asyncpg://[USER]:[SENHA]@[ENDPOINT].neon.tech:5432/[DATABASE]
+```
 
-## Proximas features da fase
+## Guia rapido: app URL vs migrations URL
 
-- Nenhuma. Fase 3 finalizada.
+- `DATABASE_URL`: URL principal usada pela aplicacao em runtime (FastAPI + services async).
+- `DATABASE_URL_MIGRATIONS`: URL opcional usada pelo Alembic.
+- Se `DATABASE_URL_MIGRATIONS` nao for definida, o projeto deriva automaticamente a partir de `DATABASE_URL`.
+- Para Supabase/Neon, `sslmode=require` e aplicado automaticamente quando ausente.
+- Regra pratica:
+  - `DATABASE_URL` sempre obrigatoria.
+  - `DATABASE_URL_MIGRATIONS` recomendada quando quiser separar credencial/rota de migration da aplicacao.
+
+## Validacao da fase
+
+- Suite de testes completa da fase executada com sucesso.
+- Comandos de validacao:
+  - `uv run python -m pytest`
+  - `uv run ruff check .`
+  - `uv run --with mypy python -m mypy .`
+
+## Historico de features
+
+- Feature 3.1: estrategia de conexao multi-provider.
+- Feature 3.2: base async e modelo `leads`.
+- Feature 3.3: setup Alembic e migration inicial.
+- Feature 3.4: implementacao do `LeadService`.
+- Feature 3.5: fechamento da fase com matriz de suporte e guia operacional.
