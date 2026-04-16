@@ -56,3 +56,8 @@
 ## Proximas features da fase
 
 - Nenhuma. Fase 4 finalizada.
+
+## Validacao da fase
+
+- Validacao automatizada registrada em `docs/phases/validacao-fase-04-2026-04-16.md`.
+- Validacao manual executada parcialmente: guardrails aprovados e smokes de CRM/Sender pendentes de endpoints reais (status `410` em URLs placeholder).
