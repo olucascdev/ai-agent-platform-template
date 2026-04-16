@@ -62,3 +62,6 @@ tmp
 
 # Optional: local PyPI creds (uncomment if you ever create it)
 # .pypirc
+agentos/
+.codenomad/
+.ruff_cache/
