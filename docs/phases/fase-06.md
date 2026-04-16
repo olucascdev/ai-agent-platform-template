@@ -11,6 +11,7 @@
 - `AgentFactory` implementada para centralizar criacao de instancias do agente Agno.
 - Prompt modular carregado via `load_prompt()` na construcao do agente.
 - Builder padrao de modelo OpenAI adicionado para preparar base de execucao da conversa.
+- Factory ampliada para alternar provider/modelo por configuracao de ambiente (OpenAI, OpenRouter, Groq, Claude e Gemini).
 - Cobertura automatizada adicionada para contrato da factory e cenarios de erro de prompt.
 
 ### Feature 6.2 - sessao single-client (`AGENT_SESSION_PREFIX + telefone`)

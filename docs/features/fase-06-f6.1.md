@@ -7,6 +7,7 @@
 - Definido builder padrao `build_default_openai_model()` para inicializar `OpenAIChat` com chave de API do ambiente.
 - Adicionado helper `build_agent_factory()` para montar a factory com `settings` globais da aplicacao.
 - Publicados exports de orquestracao em `app/agent/__init__.py` para facilitar uso nos proximos modulos da fase 6.
+- Factory expandida para selecao de provider/modelo por ambiente (`chatgpt`, `openrouter`, `groq`, `claude`, `gemini`) sem alteracao de codigo.
 
 ## Testes da feature
 

@@ -48,6 +48,13 @@ class Settings(BaseSettings):
     whatsapp_sender_auth_header_prefix: str = Field(default="Bearer")
     agent_name: str = Field(min_length=1)
     agent_session_prefix: str = Field(min_length=1)
+    agent_model_provider: str = Field(default="chatgpt", min_length=1)
+    agent_model_id: str | None = None
+    agent_model_api_key: str | None = None
+    agent_model_base_url: str | None = None
+    openrouter_api_key: str | None = None
+    groq_api_key: str | None = None
+    anthropic_api_key: str | None = None
     message_delay_seconds: int = Field(default=3, ge=0)
     http_timeout_seconds: float = Field(default=10.0, gt=0)
     http_max_retries: int = Field(default=2, ge=0)

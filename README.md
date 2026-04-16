@@ -23,6 +23,26 @@ API: `http://localhost:8000/docs`
 uv run --extra dev pytest
 ```
 
+## Provedores de modelo do agente
+
+O agente suporta selecao por ambiente sem alterar codigo:
+
+- `chatgpt` / `openai`
+- `openrouter`
+- `groq`
+- `claude` (Anthropic nativo com `ANTHROPIC_API_KEY` ou via OpenRouter)
+- `gemini` (endpoint OpenAI-compatible do Google)
+
+Variaveis opcionais:
+
+- `AGENT_MODEL_PROVIDER`
+- `AGENT_MODEL_ID`
+- `AGENT_MODEL_API_KEY`
+- `AGENT_MODEL_BASE_URL`
+- `OPENROUTER_API_KEY`
+- `GROQ_API_KEY`
+- `ANTHROPIC_API_KEY`
+
 ## Estrutura util
 
 - `app/`: API principal e modulos de aplicacao.

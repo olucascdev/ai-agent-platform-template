@@ -37,6 +37,13 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.whatsapp_sender_text_field == "text"
     assert loaded_settings.whatsapp_sender_auth_header_name == "Authorization"
     assert loaded_settings.whatsapp_sender_auth_header_prefix == "Bearer"
+    assert loaded_settings.agent_model_provider == "chatgpt"
+    assert loaded_settings.agent_model_id is None
+    assert loaded_settings.agent_model_api_key is None
+    assert loaded_settings.agent_model_base_url is None
+    assert loaded_settings.openrouter_api_key is None
+    assert loaded_settings.groq_api_key is None
+    assert loaded_settings.anthropic_api_key is None
     assert loaded_settings.audio_transcription_provider == "openai"
     assert loaded_settings.audio_transcription_model == "whisper-1"
     assert loaded_settings.audio_transcription_language is None
