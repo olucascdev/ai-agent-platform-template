@@ -12,6 +12,13 @@
 - Variaveis obrigatorias validadas na inicializacao da aplicacao.
 - Testes adicionados para defaults e campos obrigatorios.
 
+### Feature 2.2 - composicao modular de prompts
+
+- `load_prompt()` implementada em `app/config.py`.
+- Ordem de leitura dos arquivos de `prompts/` definida e validada.
+- Erro explicito adicionado para ausencia total de arquivos de prompt.
+- Testes adicionados para ordem e falha de carregamento.
+
 ## Proximas features da fase
 
-- Feature 2.2: composicao de prompt modular (load_prompt) para `prompts/`.
+- Nenhuma. Fase 2 finalizada.
