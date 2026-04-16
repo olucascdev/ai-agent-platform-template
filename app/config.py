@@ -63,6 +63,10 @@ class Settings(BaseSettings):
     pdf_processing_provider: str = Field(default="pypdf", min_length=1)
     pdf_processing_max_pages: int = Field(default=20, ge=1)
     pdf_download_timeout_seconds: float = Field(default=20.0, gt=0)
+    media_failure_fallback_text: str = Field(
+        default="Nao foi possivel processar completamente a midia enviada. Oriente o usuario a reenviar o conteudo em texto ou em formato suportado.",
+        min_length=1,
+    )
 
     model_config = SettingsConfigDict(
         env_file=".env",

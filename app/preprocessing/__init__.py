@@ -29,6 +29,12 @@ from app.preprocessing.message_composer import (
     SOURCE_PRIORITY,
     compose_agent_input,
 )
+from app.preprocessing.fallback_pipeline import (
+    PreprocessingIssue,
+    PreprocessingStage,
+    ResilientPreprocessingResult,
+    preprocess_event_with_fallback,
+)
 from app.preprocessing.pdf_processing import (
     PdfAttachmentNotFoundError,
     PdfDownloadError,
@@ -64,12 +70,15 @@ __all__ = [
     "NormalizedAttachment",
     "NormalizedIncomingEvent",
     "OpenAIAudioTranscriber",
+    "PreprocessingIssue",
+    "PreprocessingStage",
     "PdfAttachmentNotFoundError",
     "PdfDownloadError",
     "PdfProcessing",
     "PdfProcessingError",
     "PdfProcessor",
     "PyPdfProcessor",
+    "ResilientPreprocessingResult",
     "SOURCE_PRIORITY",
     "UnsupportedImageAnalysisProviderError",
     "UnsupportedPdfProcessingProviderError",
@@ -82,6 +91,7 @@ __all__ = [
     "ComposedAgentInput",
     "ComposerSource",
     "normalize_incoming_event",
+    "preprocess_event_with_fallback",
     "process_pdf_event",
     "transcribe_audio_event",
 ]

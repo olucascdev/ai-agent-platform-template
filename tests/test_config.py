@@ -48,6 +48,10 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.pdf_processing_provider == "pypdf"
     assert loaded_settings.pdf_processing_max_pages == 20
     assert loaded_settings.pdf_download_timeout_seconds == 20.0
+    assert (
+        loaded_settings.media_failure_fallback_text
+        == "Nao foi possivel processar completamente a midia enviada. Oriente o usuario a reenviar o conteudo em texto ou em formato suportado."
+    )
 
 
 def test_settings_fail_when_required_value_is_missing(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -2,7 +2,7 @@
 
 ## Status
 
-- Em andamento.
+- Concluida.
 
 ## Features concluidas
 
@@ -46,6 +46,14 @@
 - Validacao fail-fast adicionada para casos sem conteudo textual util.
 - Cobertura automatizada adicionada para prioridade, fallback, limpeza de texto e determinismo.
 
+### Feature 5.6 - fallback seguro para falhas de midia/provider
+
+- Orquestrador resiliente de preprocessamento implementado para lidar com falhas sem interromper o fluxo.
+- Erros de etapas multimodais agora sao registrados como issues estruturadas por stage.
+- Fallback textual seguro ativado automaticamente quando nao ha conteudo suficiente para composicao final.
+- Mensagem de fallback padrao tornada configuravel por ambiente.
+- Cobertura automatizada adicionada para cenarios de falha parcial e falha total de midia.
+
 ## Proximas features da fase
 
-- Feature 5.6 - fallback seguro para falhas de midia/provider.
+- Nenhuma. Fase 5 finalizada.
