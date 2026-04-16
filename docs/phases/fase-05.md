@@ -38,7 +38,14 @@
 - Erros de download/processamento mapeados para excecoes de dominio da feature.
 - Cobertura automatizada adicionada para extracao textual, limites e cenarios de falha.
 
+### Feature 5.5 - composer final de contexto para o agente
+
+- Composicao final de contexto implementada com prioridade deterministica de fontes textuais.
+- Merge estruturado entre mensagem principal e contexto complementar implementado.
+- Fallback sequencial aplicado: texto -> audio -> imagem -> pdf.
+- Validacao fail-fast adicionada para casos sem conteudo textual util.
+- Cobertura automatizada adicionada para prioridade, fallback, limpeza de texto e determinismo.
+
 ## Proximas features da fase
 
-- Feature 5.5 - composer final de contexto para agente.
 - Feature 5.6 - fallback seguro para falhas de midia/provider.

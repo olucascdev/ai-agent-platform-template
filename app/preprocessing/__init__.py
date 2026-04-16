@@ -22,6 +22,13 @@ from app.preprocessing.image_analysis import (
     analyze_image_event,
     build_image_analyzer,
 )
+from app.preprocessing.message_composer import (
+    ComposedAgentInput,
+    ComposerSource,
+    MessageCompositionError,
+    SOURCE_PRIORITY,
+    compose_agent_input,
+)
 from app.preprocessing.pdf_processing import (
     PdfAttachmentNotFoundError,
     PdfDownloadError,
@@ -53,6 +60,7 @@ __all__ = [
     "ImageAnalyzer",
     "ImageAttachmentNotFoundError",
     "ImageDownloadError",
+    "MessageCompositionError",
     "NormalizedAttachment",
     "NormalizedIncomingEvent",
     "OpenAIAudioTranscriber",
@@ -62,6 +70,7 @@ __all__ = [
     "PdfProcessingError",
     "PdfProcessor",
     "PyPdfProcessor",
+    "SOURCE_PRIORITY",
     "UnsupportedImageAnalysisProviderError",
     "UnsupportedPdfProcessingProviderError",
     "UnsupportedAudioTranscriptionProviderError",
@@ -69,6 +78,9 @@ __all__ = [
     "build_audio_transcriber",
     "build_image_analyzer",
     "build_pdf_processor",
+    "compose_agent_input",
+    "ComposedAgentInput",
+    "ComposerSource",
     "normalize_incoming_event",
     "process_pdf_event",
     "transcribe_audio_event",
