@@ -2,21 +2,12 @@
 
 ## O que foi feito
 
-- Criado workflow base n8n em `n8n/workflows/whatsapp-template-base.json`.
-- Workflow preparado para uso plugavel com:
-  - URL de API por env var (`API_PLATFORM_BASE_URL`);
-  - timeout por env var (`API_PLATFORM_TIMEOUT_MS`);
-  - autenticacao por credencial n8n (`HTTP Header Auth`) sem token hardcoded.
-- Fluxo base implementado:
-  - `Webhook` (entrada);
-  - `HTTP Request` para `POST /webhook/whatsapp`;
-  - `Respond to Webhook` com retorno `202`.
-- Adicionado guia operacional em `n8n/README.md` e exemplo de env em `n8n/.env.example`.
+- Definido modo oficial do template como **Agno-first direto**: CRM/Canal envia webhook diretamente para `POST /webhook/whatsapp` da API.
+- Removida dependencia de workflow n8n como requisito do produto para evitar camada intermediaria desnecessaria.
+- Padrao de arquitetura da fase registrado para manter simplicidade operacional (menos latencia e menos pontos de falha).
+- Fase 9 passa a tratar componentes de automacao externos como opcionais e nao obrigatorios.
 
 ## Testes da feature
 
-- Criado `tests/test_n8n_template_base.py` cobrindo:
-  - estrutura importavel minima do workflow;
-  - uso de env vars para URL/timeout;
-  - binding de credencial n8n no node HTTP;
-  - ausencia de token hardcoded no JSON do workflow.
+- Validacao completa da API executada sem componente intermediario externo (`pytest` completo).
+- Verificacao de seguranca mantida com politica de segredos (`scripts/check_secrets_policy.py`).

@@ -23,6 +23,12 @@ API: `http://localhost:8000/docs`
 uv run --extra dev pytest
 ```
 
+## Integracao de entrada (oficial)
+
+- Fluxo oficial do template: `CRM/Canal -> POST /webhook/whatsapp -> pipeline interno da API`.
+- Nao ha dependencia obrigatoria de n8n no runtime deste projeto.
+- Camadas externas de automacao (n8n, iPaaS, etc.) sao opcionais por cliente.
+
 ## Provedores de modelo do agente
 
 O agente suporta selecao por ambiente sem alterar codigo:
