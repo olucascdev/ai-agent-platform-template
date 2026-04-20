@@ -6,7 +6,7 @@ Database connection utilities.
 """
 
 from db.base import Base
-from db.models import Lead
+from db.models import Lead, ProcessedWebhookEvent
 from db.url import (
     build_sqlalchemy_engine_kwargs,
     db_url,
@@ -39,6 +39,7 @@ def get_async_engine():
 __all__ = [
     "Base",
     "Lead",
+    "ProcessedWebhookEvent",
     "build_sqlalchemy_engine_kwargs",
     "db_url",
     "get_async_engine",

@@ -1,24 +1,23 @@
-"""Modelo principal de lead para memoria de sessao e contato CRM."""
+"""Modelo de eventos processados para idempotencia de webhook."""
 
 from datetime import datetime
 
-from sqlalchemy import DateTime, String, UniqueConstraint, func
+from sqlalchemy import DateTime, String, func
 from sqlalchemy.orm import Mapped, mapped_column
 
 from db.base import Base
 
 
-class Lead(Base):
-    """Representa um lead persistido para correlacao de telefone, sessao e contato CRM."""
+class ProcessedWebhookEvent(Base):
+    """Representa evento identificado por `event_id` ou `message_id` ja processado."""
 
-    __tablename__ = "leads"
-    __table_args__ = (UniqueConstraint("phone", name="uq_leads_phone"),)
+    __tablename__ = "processed_webhook_events"
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
-    phone: Mapped[str] = mapped_column(String(32), nullable=False)
+    event_id: Mapped[str | None] = mapped_column(String(191), nullable=True)
+    message_id: Mapped[str | None] = mapped_column(String(191), nullable=True)
     session_id: Mapped[str] = mapped_column(String(120), nullable=False)
-    crm_contact_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
-    status: Mapped[str | None] = mapped_column(String(40), nullable=True)
+    contact_phone: Mapped[str] = mapped_column(String(32), nullable=False)
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True),
         nullable=False,

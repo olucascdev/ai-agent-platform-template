@@ -5,6 +5,7 @@ from os import getenv
 import uvicorn
 from fastapi import FastAPI
 
+from app.api import webhook_router
 from app.config import settings
 
 app = FastAPI(
@@ -12,6 +13,8 @@ app = FastAPI(
     description=f"API base para evoluir o webhook conversacional por fases. Agente: {settings.agent_name}.",
     version="1.0.0",
 )
+
+app.include_router(webhook_router)
 
 
 @app.get("/health")

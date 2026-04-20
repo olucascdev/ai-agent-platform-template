@@ -52,3 +52,38 @@ class LeadService:
         async with self._session_factory() as session:
             result = await session.execute(select(Lead).where(Lead.phone == phone))
             return result.scalar_one_or_none()
+
+    async def update_metadata_by_phone(
+        self,
+        phone: str,
+        *,
+        crm_contact_id: str | None = None,
+        status: str | None = None,
+    ) -> None:
+        """Persiste metadados operacionais (CRM/status) para telefone informado."""
+        normalized_phone = phone.strip()
+        if not normalized_phone:
+            raise ValueError("phone deve ser informado para atualizar metadados do lead.")
+
+        values: dict[str, Any] = {"updated_at": func.now()}
+        normalized_crm_contact_id = _normalize_optional(crm_contact_id)
+        normalized_status = _normalize_optional(status)
+        if normalized_crm_contact_id is not None:
+            values["crm_contact_id"] = normalized_crm_contact_id
+        if normalized_status is not None:
+            values["status"] = normalized_status
+
+        if len(values) == 1:
+            return
+
+        async with self._session_factory() as session:
+            await session.execute(update(Lead).where(Lead.phone == normalized_phone).values(**values))
+            await session.commit()
+
+
+def _normalize_optional(value: str | None) -> str | None:
+    if value is None:
+        return None
+
+    normalized = value.strip()
+    return normalized or None

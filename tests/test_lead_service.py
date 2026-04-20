@@ -111,3 +111,36 @@ async def test_get_by_phone_returns_lead_without_commit() -> None:
     assert lead is expected_lead
     assert fake_session.commit_called is False
     assert len(fake_session.executed_statements) == 1
+
+
+@pytest.mark.asyncio
+async def test_update_metadata_by_phone_updates_crm_contact_id_and_status() -> None:
+    """Persiste metadados operacionais no lead quando valores sao informados."""
+    fake_session = _FakeSession(selected_lead=None)
+    service = LeadService(session_factory=lambda: _FakeSessionContext(fake_session))
+
+    await service.update_metadata_by_phone(
+        "+5511666666666",
+        crm_contact_id="crm-700",
+        status="message_sent",
+    )
+
+    assert fake_session.commit_called is True
+    assert len(fake_session.executed_statements) == 1
+
+    update_sql = _compile_postgres(fake_session.executed_statements[0])
+    assert "UPDATE leads" in update_sql
+    assert "crm_contact_id='crm-700'" in update_sql
+    assert "status='message_sent'" in update_sql
+
+
+@pytest.mark.asyncio
+async def test_update_metadata_by_phone_skips_when_only_empty_values_are_provided() -> None:
+    """Evita update/commit quando nao ha metadados validos para persistir."""
+    fake_session = _FakeSession(selected_lead=None)
+    service = LeadService(session_factory=lambda: _FakeSessionContext(fake_session))
+
+    await service.update_metadata_by_phone("+5511555555555", crm_contact_id=" ", status="")
+
+    assert fake_session.executed_statements == []
+    assert fake_session.commit_called is False

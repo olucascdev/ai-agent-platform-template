@@ -18,3 +18,10 @@ def test_get_target_metadata_includes_leads_table() -> None:
     metadata = get_target_metadata()
 
     assert "leads" in metadata.tables
+
+
+def test_get_target_metadata_includes_processed_webhook_events_table() -> None:
+    """Valida que metadata de migrations inclui tabela de idempotencia do webhook."""
+    metadata = get_target_metadata()
+
+    assert "processed_webhook_events" in metadata.tables

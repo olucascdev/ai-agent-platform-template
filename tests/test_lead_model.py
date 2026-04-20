@@ -31,6 +31,7 @@ def test_lead_columns_match_phase_contract() -> None:
         "phone",
         "session_id",
         "crm_contact_id",
+        "status",
         "created_at",
         "updated_at",
     }
