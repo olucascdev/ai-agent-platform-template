@@ -2,7 +2,7 @@
 
 ## Status
 
-- Em andamento.
+- Concluida.
 
 ## Features concluidas
 
@@ -37,6 +37,14 @@
 - Configuracao declarativa de cobertura adicionada para branch coverage e relatorio padrao.
 - Cobertura automatizada adicionada para validar contrato de politica no `pyproject.toml`.
 
+### Feature 8.5 - validacao de migration no CI
+
+- Workflow `validate` atualizado para provisionar Postgres dedicado no job de CI.
+- Validacao de migrations adicionada com ciclo `upgrade -> downgrade -> upgrade` no pipeline.
+- Ambiente CI agora exporta `DATABASE_URL`/`DATABASE_URL_MIGRATIONS` para execucao real do Alembic.
+- Gate de migration executa antes de type-check e testes, bloqueando merges com cadeia de migration quebrada.
+- Cobertura automatizada adicionada para contratos do workflow de migration no CI.
+
 ## Proximas features da fase
 
-- Feature 8.5 - validacao de migration no CI.
+- Nenhuma. Fase 8 finalizada.

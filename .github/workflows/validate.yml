@@ -16,9 +16,26 @@ env:
 jobs:
   validate:
     runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+asyncpg://ai:ai@localhost:5432/ai
+      DATABASE_URL_MIGRATIONS: postgresql+asyncpg://ai:ai@localhost:5432/ai
     strategy:
       matrix:
         python-version: ["3.12"]
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: ai
+          POSTGRES_PASSWORD: ai
+          POSTGRES_DB: ai
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ai -d ai"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
 
     steps:
       - uses: actions/checkout@v4
@@ -45,6 +62,12 @@ jobs:
 
       - name: Enforce secrets policy
         run: uv run python scripts/check_secrets_policy.py
+
+      - name: Validate migrations in CI database
+        run: |
+          uv run alembic upgrade head
+          uv run alembic downgrade base
+          uv run alembic upgrade head
 
       - name: Type-check with mypy
         run: uv run mypy .

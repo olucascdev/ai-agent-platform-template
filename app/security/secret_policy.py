@@ -35,6 +35,10 @@ _REAL_SECRET_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
 _WORKFLOW_SECRET_LINE = re.compile(r"^\s*([A-Z0-9_]+)\s*:\s*(.+?)\s*$")
 _CODE_ASSIGNMENT_TEMPLATE = r"\b{env_name}\b\s*=\s*([\"'])(.*?)\1"
 _SCRIPT_EXPORT_TEMPLATE = r"\bexport\s+{env_name}\s*=\s*([\"'])(.*?)\1"
+_SAFE_NON_SECRET_PLACEHOLDERS = {
+    "postgresql+asyncpg://ai:ai@localhost:5432/ai",
+    "postgresql://ai:ai@localhost:5432/ai",
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -163,4 +167,17 @@ def _is_literal_secret_value(value: str) -> bool:
     if not stripped:
         return False
 
+    if _is_safe_placeholder_value(stripped):
+        return False
+
     return True
+
+
+def _is_safe_placeholder_value(value: str) -> bool:
+    if value in _SAFE_NON_SECRET_PLACEHOLDERS:
+        return True
+
+    if value.startswith("postgresql") and "://ai:ai@localhost:" in value:
+        return True
+
+    return False

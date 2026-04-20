@@ -24,6 +24,15 @@ def test_scan_text_allows_workflow_secret_expression() -> None:
     assert violations == []
 
 
+def test_scan_text_allows_local_placeholder_database_url_in_workflow() -> None:
+    """Permite placeholder local de CI para DATABASE_URL sem tratar como segredo real."""
+    workflow_text = "DATABASE_URL: postgresql+asyncpg://ai:ai@localhost:5432/ai"
+
+    violations = scan_text_for_secret_policy_violations(Path(".github/workflows/validate.yml"), workflow_text)
+
+    assert violations == []
+
+
 def test_scan_text_flags_hardcoded_secret_assignment_in_code() -> None:
     """Detecta assignment literal de segredo em codigo Python."""
     code_text = 'OPENAI_API_KEY = "hardcoded-value"'
