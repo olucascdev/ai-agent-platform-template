@@ -27,6 +27,10 @@ echo -e "${DIM}> ruff check ${REPO_ROOT}${NC}"
 ruff check ${REPO_ROOT}
 
 echo ""
+echo -e "${DIM}> python ${REPO_ROOT}/scripts/check_secrets_policy.py${NC}"
+python ${REPO_ROOT}/scripts/check_secrets_policy.py
+
+echo ""
 echo -e "${DIM}> mypy ${REPO_ROOT} --config-file pyproject.toml${NC}"
 mypy ${REPO_ROOT} --config-file ${REPO_ROOT}/pyproject.toml
 

@@ -21,8 +21,15 @@
 - Falha de normalizacao do webhook migrada para erro de dominio auditavel (`webhook.normalization_error`).
 - Cobertura automatizada adicionada para contratos de erro 422/404/500 e erro de aplicacao.
 
+### Feature 8.3 - politica de segredos (sem token hardcoded em codigo/workflow)
+
+- Politica de segredos implementada com varredura de codigo, workflows e scripts.
+- Regras adicionadas para bloquear valores literais em variaveis sensiveis e padroes de tokens reais.
+- Script de enforcement criado para uso local/CI (`scripts/check_secrets_policy.py`).
+- Workflow de validacao e script local de validacao atualizados para executar a politica automaticamente.
+- Cobertura automatizada adicionada para cenarios de deteccao e garantia de repositorio limpo.
+
 ## Proximas features da fase
 
-- Feature 8.3 - politica de segredos (sem token hardcoded em codigo/workflow).
 - Feature 8.4 - cobertura minima de testes definida.
 - Feature 8.5 - validacao de migration no CI.
