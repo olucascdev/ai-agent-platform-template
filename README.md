@@ -59,3 +59,20 @@ Variaveis opcionais:
 ## Proximas fases
 
 As proximas fases implementam configuracao central, migracoes, lead service, cliente CRM, preprocessor multimodal, agente Agno e webhook completo.
+
+## Release e versionamento
+
+Este template segue [Semantic Versioning](https://semver.org/). Para criar uma nova release:
+
+```bash
+# Atualizar versao
+python scripts/bump_version.py patch  # ou minor, major
+
+# Editar CHANGELOG.md com detalhes da release
+
+# Criar PR, merge e tag
+git tag -a v1.2.3 -m "Release v1.2.3"
+git push origin v1.2.3
+```
+
+O workflow automatizado cria a release no GitHub. Veja [RELEASE_PROCESS.md](docs/RELEASE_PROCESS.md) para detalhes.
