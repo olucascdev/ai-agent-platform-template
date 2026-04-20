@@ -7,6 +7,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 
 from app.api import webhook_router
+from app.api.errors import register_exception_handlers
 from app.config import settings
 from app.observability import (
     log_structured,
@@ -24,6 +25,7 @@ app = FastAPI(
 )
 
 app.include_router(webhook_router)
+register_exception_handlers(app)
 
 
 @app.middleware("http")

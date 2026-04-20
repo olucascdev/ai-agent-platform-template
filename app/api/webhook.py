@@ -2,9 +2,10 @@
 
 import logging
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, status
 
 from app.api.dependencies import get_whatsapp_webhook_pipeline_service
+from app.api.errors import ApiApplicationError
 from app.models.webhook import (
     WhatsAppWebhookAcceptedResponse,
     WhatsAppWebhookRequest,
@@ -45,7 +46,12 @@ async def receive_whatsapp_webhook(
             error_type=exc.__class__.__name__,
             detail=str(exc),
         )
-        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=str(exc)) from exc
+        raise ApiApplicationError(
+            code="webhook.normalization_error",
+            message="Webhook event normalization failed.",
+            status_code=status.HTTP_422_UNPROCESSABLE_CONTENT,
+            details={"reason": str(exc)},
+        ) from exc
 
     log_structured(
         "webhook_whatsapp_accepted",
