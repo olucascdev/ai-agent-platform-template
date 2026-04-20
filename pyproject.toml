@@ -21,7 +21,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["mypy", "ruff", "pytest", "pytest-asyncio"]
+dev = ["mypy", "ruff", "pytest", "pytest-asyncio", "pytest-cov"]
 
 [build-system]
 requires = ["setuptools"]
@@ -55,3 +55,13 @@ no-annotate = true
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 asyncio_mode = "auto"
+addopts = "--cov=app --cov=db --cov-report=term-missing --cov-fail-under=85"
+
+[tool.coverage.run]
+branch = true
+source = ["app", "db"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 85

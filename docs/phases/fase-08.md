@@ -29,7 +29,14 @@
 - Workflow de validacao e script local de validacao atualizados para executar a politica automaticamente.
 - Cobertura automatizada adicionada para cenarios de deteccao e garantia de repositorio limpo.
 
+### Feature 8.4 - cobertura minima de testes definida
+
+- Politica minima de cobertura definida com `pytest-cov` e threshold obrigatorio.
+- Testes passaram a executar cobertura por padrao com escopo em `app` e `db`.
+- Gate de qualidade configurado com `--cov-fail-under=85`.
+- Configuracao declarativa de cobertura adicionada para branch coverage e relatorio padrao.
+- Cobertura automatizada adicionada para validar contrato de politica no `pyproject.toml`.
+
 ## Proximas features da fase
 
-- Feature 8.4 - cobertura minima de testes definida.
 - Feature 8.5 - validacao de migration no CI.
