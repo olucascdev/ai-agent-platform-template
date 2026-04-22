@@ -68,6 +68,18 @@ async def healthcheck() -> dict[str, str]:
     return {"status": "ok"}
 
 
+@app.get("/agentos/info")
+async def agentos_info() -> dict[str, str]:
+    """Endpoint de informacoes para Agno Studio."""
+    return {
+        "name": settings.agent_name,
+        "version": "1.0.0",
+        "status": "running",
+        "agent_session_prefix": settings.agent_session_prefix,
+        "model_provider": settings.agent_model_provider,
+    }
+
+
 if __name__ == "__main__":
     runtime_env = getenv("RUNTIME_ENV", "prd")
     uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=(runtime_env == "dev"))
