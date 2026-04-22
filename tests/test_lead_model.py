@@ -29,6 +29,7 @@ def test_lead_columns_match_phase_contract() -> None:
     assert column_names == {
         "id",
         "phone",
+        "agent_session_id",
         "session_id",
         "crm_contact_id",
         "status",
@@ -37,4 +38,5 @@ def test_lead_columns_match_phase_contract() -> None:
     }
 
     assert Lead.__table__.columns["phone"].nullable is False
+    assert Lead.__table__.columns["agent_session_id"].nullable is False
     assert Lead.__table__.columns["session_id"].nullable is False

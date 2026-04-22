@@ -16,6 +16,7 @@ class Lead(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     phone: Mapped[str] = mapped_column(String(32), nullable=False)
+    agent_session_id: Mapped[str] = mapped_column(String(120), nullable=False)
     session_id: Mapped[str] = mapped_column(String(120), nullable=False)
     crm_contact_id: Mapped[str | None] = mapped_column(String(120), nullable=True)
     status: Mapped[str | None] = mapped_column(String(40), nullable=True)

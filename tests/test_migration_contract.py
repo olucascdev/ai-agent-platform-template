@@ -50,3 +50,19 @@ def test_phase_7_5_migration_contains_leads_status_column() -> None:
     assert '"leads"' in content
     assert '"status"' in content
     assert "ix_leads_status" in content
+
+
+def test_phase_11_migration_contains_agent_session_id_column() -> None:
+    """Garante migration que separa session_id de canal da sessao interna do agente."""
+    migration_file = (
+        Path(__file__).resolve().parents[1]
+        / "migrations"
+        / "versions"
+        / "20260422_0004_add_agent_session_id_to_leads.py"
+    )
+    content = migration_file.read_text(encoding="utf-8")
+
+    assert "op.add_column" in content
+    assert '"leads"' in content
+    assert '"agent_session_id"' in content
+    assert "ix_leads_agent_session_id" in content

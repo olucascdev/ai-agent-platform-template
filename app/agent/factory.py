@@ -26,7 +26,7 @@ OPENROUTER_API_BASE_URL = "https://openrouter.ai/api/v1"
 GROQ_OPENAI_BASE_URL = "https://api.groq.com/openai/v1"
 GEMINI_OPENAI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 
-PromptLoader = Callable[[Path | None], str]
+PromptLoader = Callable[..., str]
 ModelBuilder = Callable[[Settings], Model]
 
 
@@ -160,7 +160,14 @@ class AgentFactory:
 
     def build(self, *, session_id: str | None = None, user_id: str | None = None) -> Agent:
         """Cria agente Agno pronto para execucao de uma conversa."""
-        instructions = self.prompt_loader(self.prompts_dir)
+        try:
+            instructions = self.prompt_loader(
+                self.prompts_dir,
+                prompt_client_key=self.runtime_settings.prompt_client_key,
+                template_context=self.runtime_settings.prompt_context,
+            )
+        except TypeError:
+            instructions = self.prompt_loader(self.prompts_dir)
         return Agent(
             name=self.runtime_settings.agent_name,
             model=self.model_builder(self.runtime_settings),

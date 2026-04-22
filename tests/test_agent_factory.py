@@ -59,6 +59,26 @@ def test_build_agent_factory_uses_global_settings_reference(tmp_path: Path) -> N
     assert factory.prompts_dir == tmp_path
 
 
+def test_agent_factory_build_supports_prompt_client_profile_and_context(tmp_path: Path) -> None:
+    """Aplica override de perfil do cliente e placeholders de contexto no prompt."""
+    (tmp_path / "identity.md").write_text("IDENTITY_BASE", encoding="utf-8")
+    client_dir = tmp_path / "clients" / "cliente_a"
+    client_dir.mkdir(parents=True)
+    (client_dir / "identity.md").write_text("Atendimento {{business_name}}", encoding="utf-8")
+
+    runtime_settings = Settings(_env_file=None).model_copy(
+        update={
+            "prompt_client_key": "cliente_a",
+            "prompt_context_json": '{"business_name":"BM Odontologia"}',
+        }
+    )
+    factory = AgentFactory(runtime_settings=runtime_settings, prompts_dir=tmp_path)
+
+    agent = factory.build()
+
+    assert agent.instructions == "Atendimento BM Odontologia"
+
+
 def test_agent_factory_build_for_phone_derives_single_client_session_id(tmp_path: Path) -> None:
     """Valida composicao de `session_id` usando prefixo de ambiente + telefone."""
     (tmp_path / "identity.md").write_text("IDENTITY", encoding="utf-8")

@@ -19,22 +19,30 @@ class LeadService:
         """Recebe fabrica de sessao para facilitar teste e injecao em runtime."""
         self._session_factory = session_factory
 
-    async def upsert(self, phone: str, session_id: str) -> Lead:
-        """Insere lead sem duplicar telefone e atualiza `session_id` quando necessario."""
+    async def upsert(self, phone: str, session_id: str, *, agent_session_id: str) -> Lead:
+        """Insere lead sem duplicar telefone e sincroniza sessoes de canal e agente."""
         async with self._session_factory() as session:
             # Primeiro passo: cria o lead caso ainda nao exista para este telefone.
             await session.execute(
                 pg_insert(Lead)
-                .values(phone=phone, session_id=session_id)
+                .values(
+                    phone=phone,
+                    session_id=session_id,
+                    agent_session_id=agent_session_id,
+                )
                 .on_conflict_do_nothing(index_elements=[Lead.phone])
             )
 
-            # Segundo passo: sincroniza `session_id` caso o lead ja existisse com sessao antiga.
+            # Segundo passo: sincroniza sessoes caso o lead ja existisse com valores antigos.
             await session.execute(
                 update(Lead)
                 .where(Lead.phone == phone)
-                .where(Lead.session_id != session_id)
-                .values(session_id=session_id, updated_at=func.now())
+                .where((Lead.session_id != session_id) | (Lead.agent_session_id != agent_session_id))
+                .values(
+                    session_id=session_id,
+                    agent_session_id=agent_session_id,
+                    updated_at=func.now(),
+                )
             )
 
             await session.commit()

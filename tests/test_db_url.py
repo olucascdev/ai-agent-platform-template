@@ -32,10 +32,22 @@ def test_migrations_url_prefers_explicit_dedicated_value() -> None:
 
 
 def test_managed_provider_url_receives_sslmode_when_missing() -> None:
-    """Assegura `sslmode=require` automaticamente para Supabase/Neon."""
+    """Assegura SSL automaticamente para Supabase/Neon com driver asyncpg."""
     runtime_url = resolve_runtime_database_url("postgresql://u:p@db.abcd.supabase.co:5432/postgres")
 
-    assert "sslmode=require" in runtime_url
+    assert "ssl=require" in runtime_url
+
+
+def test_supabase_pooler_url_receives_asyncpg_compat_flag() -> None:
+    """Adiciona `prepared_statement_cache_size=0` para evitar erro com pooler + asyncpg."""
+    runtime_url = resolve_runtime_database_url(
+        "postgresql://u:p@aws-0-sa-east-1.pooler.supabase.com:6543/postgres?sslmode=require"
+    )
+
+    assert runtime_url.startswith("postgresql+asyncpg://")
+    assert "ssl=require" in runtime_url
+    assert "sslmode=require" not in runtime_url
+    assert "prepared_statement_cache_size=0" in runtime_url
 
 
 def test_engine_kwargs_include_pool_recycle_for_managed_provider() -> None:

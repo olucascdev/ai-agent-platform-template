@@ -45,6 +45,11 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.openrouter_api_key is None
     assert loaded_settings.groq_api_key is None
     assert loaded_settings.anthropic_api_key is None
+    assert loaded_settings.prompt_client_key is None
+    assert loaded_settings.prompt_context_json is None
+    assert loaded_settings.prompt_context == {}
+    assert loaded_settings.agent_timezone == "America/Sao_Paulo"
+    assert loaded_settings.agent_customer_tier is None
     assert loaded_settings.audio_transcription_provider == "openai"
     assert loaded_settings.audio_transcription_model == "whisper-1"
     assert loaded_settings.audio_transcription_language is None
@@ -99,3 +104,45 @@ def test_settings_expose_runtime_and_migration_database_urls(monkeypatch: pytest
     assert "sslmode=require" in loaded_settings.runtime_database_url
     assert loaded_settings.migrations_database_url.startswith("postgresql+asyncpg://")
     assert loaded_settings.sqlalchemy_engine_kwargs["pool_pre_ping"] is True
+
+
+def test_settings_parse_prompt_context_json(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Converte JSON de contexto em dicionario string para placeholders."""
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://ai:ai@localhost:5432/ai")
+    monkeypatch.setenv("CRM_BASE_URL", "https://crm.example.com/api/v1")
+    monkeypatch.setenv("CRM_TOKEN", "test-crm-token")
+    monkeypatch.setenv("WHATSAPP_SENDER_URL", "https://sender.example.com/send/text")
+    monkeypatch.setenv("WHATSAPP_TOKEN", "test-whatsapp-token")
+    monkeypatch.setenv("AGENT_NAME", "Luna")
+    monkeypatch.setenv("AGENT_SESSION_PREFIX", "spacecont")
+    monkeypatch.setenv("PROMPT_CONTEXT_JSON", '{"business_name":"BM","branch_count":2}')
+
+    loaded_settings = Settings(_env_file=None)
+
+    assert loaded_settings.prompt_context == {
+        "business_name": "BM",
+        "branch_count": "2",
+    }
+
+
+def test_settings_raise_for_invalid_prompt_context_json(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Falha explicita quando PROMPT_CONTEXT_JSON nao e um objeto JSON valido."""
+    monkeypatch.setenv("OPENAI_API_KEY", "test-openai-key")
+    monkeypatch.setenv("GOOGLE_API_KEY", "test-google-key")
+    monkeypatch.setenv("DATABASE_URL", "postgresql+asyncpg://ai:ai@localhost:5432/ai")
+    monkeypatch.setenv("CRM_BASE_URL", "https://crm.example.com/api/v1")
+    monkeypatch.setenv("CRM_TOKEN", "test-crm-token")
+    monkeypatch.setenv("WHATSAPP_SENDER_URL", "https://sender.example.com/send/text")
+    monkeypatch.setenv("WHATSAPP_TOKEN", "test-whatsapp-token")
+    monkeypatch.setenv("AGENT_NAME", "Luna")
+    monkeypatch.setenv("AGENT_SESSION_PREFIX", "spacecont")
+    monkeypatch.setenv("PROMPT_CONTEXT_JSON", "[1,2,3]")
+
+    loaded_settings = Settings(_env_file=None)
+
+    with pytest.raises(RuntimeError) as exc_info:
+        _ = loaded_settings.prompt_context
+
+    assert "PROMPT_CONTEXT_JSON invalido" in str(exc_info.value)

@@ -5,6 +5,7 @@ from typing import Any
 
 from app.agent.guardrails import DEFAULT_GUARDRAIL_FALLBACK_TEXT
 from app.core.webhook_idempotency_service import IdempotencyDecision
+from app.integrations.http_client import HttpClientResponseError
 from app.preprocessing import ResilientPreprocessingResult, normalize_incoming_event
 from app.services.webhook_pipeline import WhatsAppWebhookPipelineService
 
@@ -14,12 +15,12 @@ class _FakeLeadService:
 
     def __init__(self, order: list[str]) -> None:
         self.order = order
-        self.last_call: tuple[str, str] | None = None
+        self.last_call: tuple[str, str, str] | None = None
         self.metadata_updates: list[tuple[str, str | None, str | None]] = []
 
-    async def upsert(self, phone: str, session_id: str) -> Any:
+    async def upsert(self, phone: str, session_id: str, *, agent_session_id: str) -> Any:
         self.order.append("lead_upsert")
-        self.last_call = (phone, session_id)
+        self.last_call = (phone, session_id, agent_session_id)
         return SimpleNamespace(id=42)
 
     async def update_metadata_by_phone(
@@ -72,6 +73,23 @@ class _FakeCRMClient:
             return None
 
         return SimpleNamespace(contact_id=self.contact_id)
+
+
+class _FailingCRMClient:
+    """Cliente CRM fake que simula falha HTTP na etapa de lookup."""
+
+    def __init__(self, order: list[str]) -> None:
+        self.order = order
+
+    async def find_contact_by_phone(self, phone: str) -> Any:
+        self.order.append("crm_lookup")
+        raise HttpClientResponseError(
+            method="GET",
+            url="https://api.wts.chat/chat/v1/contacts",
+            status_code=401,
+            retryable=False,
+            response_text='{"key":"ERROR_UNAUTHORIZED"}',
+        )
 
 
 class _FakeAgent:
@@ -183,10 +201,19 @@ async def test_webhook_pipeline_runs_expected_sequence_end_to_end() -> None:
         "sender_send",
         "lead_update_metadata",
     ]
-    assert lead_service.last_call == ("+5511999999999", "spacecont:5511999999999")
+    assert lead_service.last_call == (
+        "+5511999999999",
+        "sessao-original",
+        "spacecont:5511999999999",
+    )
     assert idempotency_service.last_call == ("evt-101", "msg-101", "sessao-original", "+5511999999999")
     assert crm_client.last_phone == "+5511999999999"
     assert agent_factory.last_call == ("+5511999999999", "42")
+    assert agent.last_prompt is not None
+    assert "<dadosLead>" in agent.last_prompt
+    assert "<telefone>+5511999999999</telefone>" in agent.last_prompt
+    assert "<session_id>sessao-original</session_id>" in agent.last_prompt
+    assert "[mensagem_principal]" in agent.last_prompt
     assert sender_client.last_payload == ("+5511999999999", "Resposta final do agente", "sessao-original")
     assert lead_service.metadata_updates == [
         ("+5511999999999", "crm-42", "message_sent"),
@@ -313,3 +340,40 @@ async def test_webhook_pipeline_handles_reset_command_before_crm_and_agent_reply
     assert lead_service.metadata_updates == [
         ("+5511999999999", None, "session_reset"),
     ]
+
+
+async def test_webhook_pipeline_keeps_flow_when_crm_lookup_fails() -> None:
+    """Falha de lookup CRM nao deve derrubar webhook nem impedir envio da resposta."""
+    order: list[str] = []
+    lead_service = _FakeLeadService(order)
+    idempotency_service = _FakeIdempotencyService(order)
+    crm_client = _FailingCRMClient(order)
+    agent = _FakeAgent(order, response_text="Resposta final do agente")
+    agent_factory = _FakeAgentFactory(order, agent=agent)
+    sender_client = _FakeSenderClient(order)
+
+    service = WhatsAppWebhookPipelineService(
+        lead_service=lead_service,
+        idempotency_service=idempotency_service,
+        crm_client=crm_client,
+        agent_factory=agent_factory,
+        sender_client=sender_client,
+        normalize_event=normalize_incoming_event,
+        preprocess_event=lambda event: _fake_preprocess_event(event, order),
+    )
+
+    result = await service.process(_build_payload())
+
+    assert order == [
+        "idempotency",
+        "lead_upsert",
+        "crm_lookup",
+        "preprocess",
+        "agent_build",
+        "agent_run",
+        "sender_send",
+        "lead_update_metadata",
+    ]
+    assert result.crm_contact_id is None
+    assert result.sender_status_code == 200
+    assert result.sent_message_text == "Resposta final do agente"

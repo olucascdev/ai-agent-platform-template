@@ -65,11 +65,19 @@ def _compile_postgres(statement: Any) -> str:
 @pytest.mark.asyncio
 async def test_upsert_executes_insert_update_select_sequence() -> None:
     """Garante o fluxo `insert do nothing` -> `update` -> `select` no upsert."""
-    expected_lead = SimpleNamespace(phone="+5511999999999", session_id="tenant_abc")
+    expected_lead = SimpleNamespace(
+        phone="+5511999999999",
+        session_id="session_payload_123",
+        agent_session_id="tenant_abc",
+    )
     fake_session = _FakeSession(selected_lead=expected_lead)
     service = LeadService(session_factory=lambda: _FakeSessionContext(fake_session))
 
-    lead = await service.upsert(phone="+5511999999999", session_id="tenant_abc")
+    lead = await service.upsert(
+        phone="+5511999999999",
+        session_id="session_payload_123",
+        agent_session_id="tenant_abc",
+    )
 
     assert lead is expected_lead
     assert fake_session.commit_called is True
@@ -83,6 +91,7 @@ async def test_upsert_executes_insert_update_select_sequence() -> None:
     assert "ON CONFLICT (phone) DO NOTHING" in insert_sql
     assert "UPDATE leads" in update_sql
     assert "session_id" in update_sql
+    assert "agent_session_id" in update_sql
     assert "SELECT" in select_sql
     assert "FROM leads" in select_sql
 
@@ -94,7 +103,11 @@ async def test_upsert_raises_when_lead_is_not_returned() -> None:
     service = LeadService(session_factory=lambda: _FakeSessionContext(fake_session))
 
     with pytest.raises(RuntimeError) as exc_info:
-        await service.upsert(phone="+5511888888888", session_id="tenant_xyz")
+        await service.upsert(
+            phone="+5511888888888",
+            session_id="session_payload_xyz",
+            agent_session_id="tenant_xyz",
+        )
 
     assert "nao foi encontrado apos upsert" in str(exc_info.value)
 
@@ -102,7 +115,11 @@ async def test_upsert_raises_when_lead_is_not_returned() -> None:
 @pytest.mark.asyncio
 async def test_get_by_phone_returns_lead_without_commit() -> None:
     """Valida consulta simples por telefone sem efeito colateral de commit."""
-    expected_lead = SimpleNamespace(phone="+5511777777777", session_id="tenant_mno")
+    expected_lead = SimpleNamespace(
+        phone="+5511777777777",
+        session_id="session_payload_mno",
+        agent_session_id="tenant_mno",
+    )
     fake_session = _FakeSession(selected_lead=expected_lead)
     service = LeadService(session_factory=lambda: _FakeSessionContext(fake_session))
 

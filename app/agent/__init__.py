@@ -30,6 +30,7 @@ from app.agent.guardrails import (
     apply_response_guardrails,
 )
 from app.agent.handoff_comments import HandoffCommentInput, build_structured_handoff_comment
+from app.agent.runtime_context import build_runtime_context_block, compose_message_with_runtime_context
 from app.agent.session import build_single_client_session_id
 
 __all__ = [
@@ -55,6 +56,8 @@ __all__ = [
     "apply_response_guardrails",
     "build_agent_factory",
     "build_default_agent_model",
+    "build_runtime_context_block",
+    "compose_message_with_runtime_context",
     "build_structured_handoff_comment",
     "evaluate_conversation_rules",
     "build_single_client_session_id",

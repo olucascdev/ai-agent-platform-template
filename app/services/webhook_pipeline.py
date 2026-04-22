@@ -1,17 +1,26 @@
 """Orquestracao do pipeline E2E do webhook WhatsApp."""
 
 from dataclasses import dataclass
+import logging
 from typing import Any, Awaitable, Callable
 from typing import Protocol
 
-from app.agent import apply_response_guardrails, build_agent_factory
+from app.agent import (
+    apply_response_guardrails,
+    build_agent_factory,
+    build_runtime_context_block,
+    compose_message_with_runtime_context,
+)
 from app.agent.session import build_single_client_session_id
+from app.config import settings
 from app.core.lead_service import LeadService
 from app.core.webhook_idempotency_service import IdempotencyDecision, WebhookIdempotencyService
 from app.integrations import (
     build_crm_client,
     build_whatsapp_sender_client,
 )
+from app.integrations.http_client import HttpClientError
+from app.observability import log_structured
 from app.preprocessing import (
     NormalizedIncomingEvent,
     ResilientPreprocessingResult,
@@ -28,7 +37,7 @@ PreprocessEvent = Callable[[NormalizedIncomingEvent], Awaitable[ResilientPreproc
 class LeadServiceLike(Protocol):
     """Contrato minimo de persistencia de lead usado pelo pipeline."""
 
-    async def upsert(self, phone: str, session_id: str) -> LeadRecord: ...
+    async def upsert(self, phone: str, session_id: str, *, agent_session_id: str) -> LeadRecord: ...
 
     async def update_metadata_by_phone(
         self,
@@ -132,7 +141,11 @@ class WhatsAppWebhookPipelineService:
 
         single_client_session_id = build_single_client_session_id(normalized_event.contact_phone)
 
-        lead = await self.lead_service.upsert(phone=normalized_event.contact_phone, session_id=single_client_session_id)
+        lead = await self.lead_service.upsert(
+            phone=normalized_event.contact_phone,
+            session_id=normalized_event.session_id,
+            agent_session_id=single_client_session_id,
+        )
         lead_id = _extract_optional_int(getattr(lead, "id", None))
 
         session_command = resolve_session_command(normalized_event.text)
@@ -171,14 +184,32 @@ class WhatsAppWebhookPipelineService:
                 sender_payload=sender_result.payload,
             )
 
-        crm_contact = await self.crm_client.find_contact_by_phone(normalized_event.contact_phone)
+        try:
+            crm_contact = await self.crm_client.find_contact_by_phone(normalized_event.contact_phone)
+        except HttpClientError as exc:
+            log_structured(
+                "crm_lookup_failed",
+                level=logging.WARNING,
+                error_type=exc.__class__.__name__,
+                detail=str(exc),
+            )
+            crm_contact = None
         crm_contact_id = crm_contact.contact_id if crm_contact is not None else None
 
         preprocessing_result = await self.preprocess_event(normalized_event)
+        runtime_context_block = build_runtime_context_block(
+            normalized_event,
+            customer_tier=settings.agent_customer_tier,
+            timezone_name=settings.agent_timezone,
+        )
+        message_for_agent = compose_message_with_runtime_context(
+            runtime_context_block,
+            preprocessing_result.message_for_agent,
+        )
         agent = self.agent_factory.build_for_phone(
             contact_phone=normalized_event.contact_phone, user_id=_to_user_id(lead_id)
         )
-        agent_response_text = await _run_agent(agent=agent, message_for_agent=preprocessing_result.message_for_agent)
+        agent_response_text = await _run_agent(agent=agent, message_for_agent=message_for_agent)
 
         guardrail_result = apply_response_guardrails(agent_response_text)
         sent_message_text = guardrail_result.output_text

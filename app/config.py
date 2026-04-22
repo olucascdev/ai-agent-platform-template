@@ -1,7 +1,9 @@
 """Configuracao central da aplicacao com validacao fail-fast."""
 
 from functools import lru_cache
+import json
 from pathlib import Path
+import re
 
 from pydantic import Field, ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -13,6 +15,7 @@ from db.url import (
 )
 
 PROMPTS_DIR = Path(__file__).resolve().parents[1] / "prompts"
+PROMPTS_CLIENTS_DIR_NAME = "clients"
 PROMPT_FILES_ORDER = (
     "identity.md",
     "departments.md",
@@ -20,6 +23,7 @@ PROMPT_FILES_ORDER = (
     "faq.md",
     "flow_steps.md",
 )
+PROMPT_VARIABLE_PATTERN = re.compile(r"\{\{\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\}\}")
 
 
 class Settings(BaseSettings):
@@ -56,6 +60,10 @@ class Settings(BaseSettings):
     openrouter_api_key: str | None = None
     groq_api_key: str | None = None
     anthropic_api_key: str | None = None
+    prompt_client_key: str | None = None
+    prompt_context_json: str | None = None
+    agent_timezone: str = Field(default="America/Sao_Paulo", min_length=1)
+    agent_customer_tier: str | None = None
     message_delay_seconds: int = Field(default=3, ge=0)
     http_timeout_seconds: float = Field(default=10.0, gt=0)
     http_max_retries: int = Field(default=2, ge=0)
@@ -98,6 +106,32 @@ class Settings(BaseSettings):
         """Retorna configuracoes padrao de engine para conexoes mais estaveis."""
         return build_sqlalchemy_engine_kwargs(self.runtime_database_url)
 
+    @property
+    def prompt_context(self) -> dict[str, str]:
+        """Retorna dicionario de placeholders do prompt a partir de `PROMPT_CONTEXT_JSON`."""
+        raw_context = _normalize_optional(self.prompt_context_json)
+        if raw_context is None:
+            return {}
+
+        try:
+            loaded = json.loads(raw_context)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("PROMPT_CONTEXT_JSON invalido: informe um JSON objeto valido.") from exc
+
+        if not isinstance(loaded, dict):
+            raise RuntimeError("PROMPT_CONTEXT_JSON invalido: o valor deve ser um objeto JSON (chave/valor).")
+
+        context: dict[str, str] = {}
+        for key, value in loaded.items():
+            normalized_key = _normalize_optional(str(key))
+            if normalized_key is None:
+                continue
+            if value is None:
+                continue
+            context[normalized_key] = str(value)
+
+        return context
+
 
 @lru_cache(maxsize=1)
 def get_settings() -> Settings:
@@ -111,17 +145,37 @@ def get_settings() -> Settings:
         ) from exc
 
 
-def load_prompt(prompts_dir: Path | None = None) -> str:
+def load_prompt(
+    prompts_dir: Path | None = None,
+    *,
+    prompt_client_key: str | None = None,
+    template_context: dict[str, str] | None = None,
+) -> str:
     """Carrega os arquivos de prompt em ordem definida e concatena em uma unica string."""
     resolved_prompts_dir = prompts_dir or PROMPTS_DIR
+    normalized_client_key = _normalize_optional(prompt_client_key)
+    resolved_template_context = _normalize_template_context(template_context)
     prompt_chunks: list[str] = []
 
     for file_name in PROMPT_FILES_ORDER:
-        prompt_file = resolved_prompts_dir / file_name
+        prompt_file = _resolve_prompt_file(
+            prompts_dir=resolved_prompts_dir,
+            file_name=file_name,
+            prompt_client_key=normalized_client_key,
+        )
         if not prompt_file.exists():
             continue
 
-        prompt_chunks.append(prompt_file.read_text(encoding="utf-8").strip())
+        raw_content = prompt_file.read_text(encoding="utf-8").strip()
+        if not raw_content:
+            continue
+
+        rendered_content = _render_prompt_variables(
+            raw_content,
+            template_context=resolved_template_context,
+            prompt_file=prompt_file,
+        )
+        prompt_chunks.append(rendered_content)
 
     if not prompt_chunks:
         raise RuntimeError(
@@ -130,6 +184,63 @@ def load_prompt(prompts_dir: Path | None = None) -> str:
         )
 
     return "\n\n".join(prompt_chunks)
+
+
+def _resolve_prompt_file(*, prompts_dir: Path, file_name: str, prompt_client_key: str | None) -> Path:
+    if prompt_client_key is None:
+        return prompts_dir / file_name
+
+    client_file = prompts_dir / PROMPTS_CLIENTS_DIR_NAME / prompt_client_key / file_name
+    if client_file.exists():
+        return client_file
+
+    return prompts_dir / file_name
+
+
+def _render_prompt_variables(content: str, *, template_context: dict[str, str], prompt_file: Path) -> str:
+    missing_placeholders: set[str] = set()
+
+    def replace_variable(match: re.Match[str]) -> str:
+        variable_name = match.group(1)
+        resolved_value = template_context.get(variable_name)
+        if resolved_value is None:
+            missing_placeholders.add(variable_name)
+            return match.group(0)
+
+        return resolved_value
+
+    rendered_content = PROMPT_VARIABLE_PATTERN.sub(replace_variable, content)
+    if missing_placeholders:
+        missing_list = ", ".join(sorted(missing_placeholders))
+        raise RuntimeError(
+            "Prompt contem placeholder sem valor. "
+            f"Arquivo: {prompt_file}. Variaveis ausentes: {missing_list}. "
+            "Defina os valores em PROMPT_CONTEXT_JSON."
+        )
+
+    return rendered_content
+
+
+def _normalize_template_context(template_context: dict[str, str] | None) -> dict[str, str]:
+    if not template_context:
+        return {}
+
+    normalized_context: dict[str, str] = {}
+    for key, value in template_context.items():
+        normalized_key = _normalize_optional(key)
+        if normalized_key is None:
+            continue
+        normalized_context[normalized_key] = value
+
+    return normalized_context
+
+
+def _normalize_optional(value: str | None) -> str | None:
+    if value is None:
+        return None
+
+    normalized = value.strip()
+    return normalized or None
 
 
 # Carregamento imediato para falhar cedo caso alguma variavel obrigatoria esteja ausente.
