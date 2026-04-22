@@ -112,11 +112,11 @@ class _FakeSenderClient:
 
     def __init__(self, order: list[str]) -> None:
         self.order = order
-        self.last_payload: tuple[str, str] | None = None
+        self.last_payload: tuple[str, str, str | None] | None = None
 
-    async def send_text(self, *, phone: str, text: str) -> Any:
+    async def send_text(self, *, phone: str, text: str, session_id: str | None = None) -> Any:
         self.order.append("sender_send")
-        self.last_payload = (phone, text)
+        self.last_payload = (phone, text, session_id)
         return SimpleNamespace(status_code=200, payload={"queued": True})
 
 
@@ -187,7 +187,7 @@ async def test_webhook_pipeline_runs_expected_sequence_end_to_end() -> None:
     assert idempotency_service.last_call == ("evt-101", "msg-101", "sessao-original", "+5511999999999")
     assert crm_client.last_phone == "+5511999999999"
     assert agent_factory.last_call == ("+5511999999999", "42")
-    assert sender_client.last_payload == ("+5511999999999", "Resposta final do agente")
+    assert sender_client.last_payload == ("+5511999999999", "Resposta final do agente", "sessao-original")
     assert lead_service.metadata_updates == [
         ("+5511999999999", "crm-42", "message_sent"),
     ]
@@ -230,7 +230,7 @@ async def test_webhook_pipeline_applies_guardrail_fallback_before_sender() -> No
     assert result.session_command is None
     assert result.lead_status == "message_sent"
     assert result.sent_message_text == DEFAULT_GUARDRAIL_FALLBACK_TEXT
-    assert sender_client.last_payload == ("+5511999999999", DEFAULT_GUARDRAIL_FALLBACK_TEXT)
+    assert sender_client.last_payload == ("+5511999999999", DEFAULT_GUARDRAIL_FALLBACK_TEXT, "sessao-original")
     assert lead_service.metadata_updates == [
         ("+5511999999999", None, "message_sent"),
     ]

@@ -83,6 +83,49 @@ async def test_sender_client_supports_custom_method_and_payload_fields() -> None
 
 
 @pytest.mark.asyncio
+async def test_sender_client_supports_session_path_template_and_text_only_payload() -> None:
+    """Permite URL com `{session_id}` e payload apenas com texto para provedores tipo WTS."""
+    seen_request: dict[str, Any] = {}
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        seen_request["path"] = request.url.path
+        seen_request["body"] = request.content.decode("utf-8")
+        return httpx.Response(status_code=200, request=request, json={"sent": True})
+
+    client = WhatsAppSenderClient(
+        http_client=_build_http_client(handler),
+        send_path="/chat/v1/session/{session_id}/message",
+        include_number_field=False,
+        text_field="text",
+    )
+
+    result = await client.send_text(phone="+5531888888888", text="Mensagem customizada", session_id="sess-abc")
+
+    assert seen_request["path"] == "/chat/v1/session/sess-abc/message"
+    assert '"text":"Mensagem customizada"' in seen_request["body"]
+    assert '"number":' not in seen_request["body"]
+    assert result.payload == {"sent": True}
+
+
+@pytest.mark.asyncio
+async def test_sender_client_raises_when_template_needs_session_id_but_not_provided() -> None:
+    """Falha cedo quando URL do sender exige `session_id` e chamada nao informa o valor."""
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(status_code=200, request=request, json={"ok": True})
+
+    client = WhatsAppSenderClient(
+        http_client=_build_http_client(handler),
+        send_path="/chat/v1/session/{session_id}/message",
+    )
+
+    with pytest.raises(ValueError) as exc_info:
+        await client.send_text(phone="+5531999999999", text="ok")
+
+    assert "placeholders sem valor" in str(exc_info.value)
+
+
+@pytest.mark.asyncio
 async def test_sender_client_returns_empty_payload_for_empty_response_body() -> None:
     """Retorna payload vazio quando provedor responde sem corpo."""
 

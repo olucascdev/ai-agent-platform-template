@@ -56,11 +56,13 @@ Consolidar os contratos de request/response das integracoes HTTP do template par
 
 - Metodo: configuravel via `WHATSAPP_SENDER_METHOD` (default: `POST`)
 - URL: `WHATSAPP_SENDER_URL` (URL completa)
+  - Pode conter placeholders: `{session_id}`, `{sessionId}`, `{phone}`, `{number}`
 - Header de autenticacao:
   - nome: `WHATSAPP_SENDER_AUTH_HEADER_NAME` (default: `Authorization`)
   - prefixo: `WHATSAPP_SENDER_AUTH_HEADER_PREFIX` (default: `Bearer`)
   - valor base: `WHATSAPP_TOKEN`
 - Body JSON configuravel:
+  - incluir telefone no body: `WHATSAPP_SENDER_INCLUDE_NUMBER` (default: `true`)
   - campo telefone: `WHATSAPP_SENDER_NUMBER_FIELD` (default: `number`)
   - campo texto: `WHATSAPP_SENDER_TEXT_FIELD` (default: `text`)
 
@@ -71,6 +73,14 @@ Consolidar os contratos de request/response das integracoes HTTP do template par
   "number": "+5531999999999",
   "text": "Ola! Recebemos sua solicitacao."
 }
+```
+
+### Exemplo WTS/Helena por session
+
+```env
+WHATSAPP_SENDER_URL=https://api.wts.chat/chat/v1/session/{session_id}/message
+WHATSAPP_SENDER_INCLUDE_NUMBER=false
+WHATSAPP_SENDER_TEXT_FIELD=text
 ```
 
 ## Politica de retry por integracao

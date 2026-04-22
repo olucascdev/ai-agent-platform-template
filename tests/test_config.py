@@ -33,6 +33,7 @@ def test_settings_apply_default_message_delay(monkeypatch: pytest.MonkeyPatch) -
     assert loaded_settings.crm_auth_header_name == "Authorization"
     assert loaded_settings.crm_auth_header_prefix == "Bearer"
     assert loaded_settings.whatsapp_sender_method == "POST"
+    assert loaded_settings.whatsapp_sender_include_number is True
     assert loaded_settings.whatsapp_sender_number_field == "number"
     assert loaded_settings.whatsapp_sender_text_field == "text"
     assert loaded_settings.whatsapp_sender_auth_header_name == "Authorization"

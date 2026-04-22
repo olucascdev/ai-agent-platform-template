@@ -1,6 +1,7 @@
 """Cliente de envio WhatsApp configuravel via HTTP."""
 
 from dataclasses import dataclass
+import re
 from typing import Any
 from urllib.parse import urlsplit
 
@@ -29,31 +30,61 @@ class WhatsAppSenderClient:
         http_client: ResilientHttpClient,
         send_path: str,
         method: str = "POST",
+        include_number_field: bool = True,
         number_field: str = "number",
         text_field: str = "text",
     ) -> None:
         self._http_client = http_client
-        self._send_path = send_path
+        self._send_path_template = send_path
         self._method = method.upper()
+        self._include_number_field = include_number_field
         self._number_field = number_field
         self._text_field = text_field
 
-    async def send_text(self, *, phone: str, text: str) -> WhatsAppSendResult:
+    async def send_text(self, *, phone: str, text: str, session_id: str | None = None) -> WhatsAppSendResult:
         """Envia mensagem de texto para numero de telefone informado."""
         normalized_phone = phone.strip()
         normalized_text = text.strip()
+        normalized_session_id = session_id.strip() if isinstance(session_id, str) else None
         if not normalized_phone:
             raise ValueError("Telefone deve ser informado para envio de mensagem no sender WhatsApp.")
         if not normalized_text:
             raise ValueError("Texto deve ser informado para envio de mensagem no sender WhatsApp.")
 
+        send_path = self._render_send_path(phone=normalized_phone, session_id=normalized_session_id)
+        payload: dict[str, str] = {self._text_field: normalized_text}
+        if self._include_number_field:
+            payload[self._number_field] = normalized_phone
+
         response = await self._http_client.request(
             self._method,
-            self._send_path,
-            json_body={self._number_field: normalized_phone, self._text_field: normalized_text},
+            send_path,
+            json_body=payload,
         )
 
         return WhatsAppSendResult(status_code=response.status_code, payload=self._parse_json_response(response))
+
+    def _render_send_path(self, *, phone: str, session_id: str | None) -> str:
+        path = self._send_path_template
+        replacements: dict[str, str] = {
+            "phone": phone,
+            "number": phone,
+        }
+        if session_id:
+            replacements["session_id"] = session_id
+            replacements["sessionId"] = session_id
+
+        for placeholder, value in replacements.items():
+            path = path.replace(f"{{{placeholder}}}", value)
+
+        unresolved_placeholders = sorted(set(re.findall(r"\{([a-zA-Z_][a-zA-Z0-9_]*)\}", path)))
+        if unresolved_placeholders:
+            raise ValueError(
+                "WHATSAPP_SENDER_URL contem placeholders sem valor. "
+                f"Resolva as chaves: {', '.join(unresolved_placeholders)}."
+            )
+
+        return path
 
     def _parse_json_response(self, response: httpx.Response) -> dict[str, Any]:
         payload = parse_json_payload(response, integration_name="whatsapp_sender.send_text")
@@ -103,6 +134,7 @@ def build_whatsapp_sender_client(*, transport: httpx.AsyncBaseTransport | None =
         http_client=http_client,
         send_path=send_path,
         method=settings.whatsapp_sender_method,
+        include_number_field=settings.whatsapp_sender_include_number,
         number_field=settings.whatsapp_sender_number_field,
         text_field=settings.whatsapp_sender_text_field,
     )

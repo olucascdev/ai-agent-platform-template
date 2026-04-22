@@ -54,7 +54,7 @@ class AgentFactoryLike(Protocol):
 class SenderClientLike(Protocol):
     """Contrato minimo de envio de mensagem no sender WhatsApp."""
 
-    async def send_text(self, *, phone: str, text: str) -> Any: ...
+    async def send_text(self, *, phone: str, text: str, session_id: str | None = None) -> Any: ...
 
 
 class IdempotencyServiceLike(Protocol):
@@ -147,7 +147,11 @@ class WhatsAppWebhookPipelineService:
                 session_id=single_client_session_id,
                 user_id=_to_user_id(lead_id),
             )
-            sender_result = await self.sender_client.send_text(phone=normalized_event.contact_phone, text=command_reply)
+            sender_result = await self.sender_client.send_text(
+                phone=normalized_event.contact_phone,
+                text=command_reply,
+                session_id=normalized_event.session_id,
+            )
             await self.lead_service.update_metadata_by_phone(
                 normalized_event.contact_phone,
                 status="session_reset",
@@ -179,7 +183,11 @@ class WhatsAppWebhookPipelineService:
         guardrail_result = apply_response_guardrails(agent_response_text)
         sent_message_text = guardrail_result.output_text
 
-        sender_result = await self.sender_client.send_text(phone=normalized_event.contact_phone, text=sent_message_text)
+        sender_result = await self.sender_client.send_text(
+            phone=normalized_event.contact_phone,
+            text=sent_message_text,
+            session_id=normalized_event.session_id,
+        )
         lead_status = "message_sent"
         await self.lead_service.update_metadata_by_phone(
             normalized_event.contact_phone,

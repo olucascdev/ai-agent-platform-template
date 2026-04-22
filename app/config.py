@@ -42,6 +42,7 @@ class Settings(BaseSettings):
     whatsapp_sender_url: str = Field(min_length=1)
     whatsapp_token: str = Field(min_length=1)
     whatsapp_sender_method: str = Field(default="POST", min_length=1)
+    whatsapp_sender_include_number: bool = Field(default=True)
     whatsapp_sender_number_field: str = Field(default="number", min_length=1)
     whatsapp_sender_text_field: str = Field(default="text", min_length=1)
     whatsapp_sender_auth_header_name: str = Field(default="Authorization", min_length=1)
