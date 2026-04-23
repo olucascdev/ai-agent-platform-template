@@ -53,6 +53,92 @@ class ImageAnalyzer(Protocol):
         """Retorna analise textual a partir dos bytes da imagem."""
 
 
+class GroqImageAnalyzer:
+    """Implementacao de analise de imagem usando Groq Vision."""
+
+    def __init__(
+        self,
+        *,
+        model: str,
+        prompt: str,
+        api_key: str,
+        base_url: str = "https://api.groq.com/openai/v1",
+    ) -> None:
+        self._model = model
+        self._prompt = prompt.strip()
+        self._api_key = api_key
+        self._base_url = base_url
+        self._client = self._build_openai_client(api_key=api_key, base_url=base_url)
+
+    async def analyze(
+        self,
+        *,
+        image_bytes: bytes,
+        mime_type: str,
+        file_name: str | None,
+        text_hint: str | None,
+    ) -> ImageAnalysis:
+        """Executa analise de imagem no provider Groq e retorna texto consolidado."""
+        if not image_bytes:
+            raise ImageAnalysisError("Arquivo de imagem vazio recebido para analise.")
+
+        import base64
+        image_base64 = base64.b64encode(image_bytes).decode('utf-8')
+        image_url = f"data:{mime_type};base64,{image_base64}"
+
+        prompt = self._build_prompt(text_hint=text_hint)
+        
+        try:
+            response = await self._client.chat.completions.create(
+                model=self._model,
+                messages=[
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": image_url}}
+                        ]
+                    }
+                ],
+                temperature=0.7,
+                max_tokens=1024,
+            )
+        except Exception as exc:
+            raise ImageAnalysisError("Falha ao executar analise de imagem no provider Groq.") from exc
+
+        normalized_text = self._extract_response_text(response)
+        if normalized_text is None:
+            raise ImageAnalysisError("Provider Groq retornou analise vazia para a imagem enviada.")
+
+        return ImageAnalysis(text=normalized_text, provider="groq", model=self._model)
+
+    def _build_prompt(self, *, text_hint: str | None) -> str:
+        if not text_hint:
+            return self._prompt
+
+        return f"{self._prompt}\n\nContexto adicional enviado pelo usuario: {text_hint}"
+
+    @staticmethod
+    def _build_openai_client(*, api_key: str, base_url: str) -> Any:
+        from openai import AsyncOpenAI
+        return AsyncOpenAI(api_key=api_key, base_url=base_url)
+
+    def _extract_response_text(self, response: Any) -> str | None:
+        try:
+            if hasattr(response, 'choices') and len(response.choices) > 0:
+                choice = response.choices[0]
+                if hasattr(choice, 'message') and hasattr(choice.message, 'content'):
+                    text = choice.message.content
+                    if isinstance(text, str):
+                        normalized = text.strip()
+                        if normalized:
+                            return normalized
+        except Exception:
+            pass
+        
+        return None
+
+
 class GoogleImageAnalyzer:
     """Implementacao de analise de imagem usando Google Gemini."""
 
@@ -154,9 +240,17 @@ def build_image_analyzer(*, model_client: Any | None = None) -> ImageAnalyzer:
             api_key=settings.google_api_key,
             model_client=model_client,
         )
+    
+    if provider == "groq":
+        groq_model = settings.image_analysis_model if settings.image_analysis_model != "models/gemini-2.0-flash-lite" else "llama-3.2-90b-vision-preview"
+        return GroqImageAnalyzer(
+            model=groq_model,
+            prompt=settings.image_analysis_prompt,
+            api_key=settings.groq_api_key,
+        )
 
     raise UnsupportedImageAnalysisProviderError(
-        f"Provider de analise de imagem nao suportado: {settings.image_analysis_provider}."
+        f"Provider de analise de imagem nao suportado: {settings.image_analysis_provider}. Suportados: google, groq."
     )
 
 

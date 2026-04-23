@@ -48,10 +48,11 @@ class AudioTranscriber(Protocol):
 class OpenAIAudioTranscriber:
     """Implementacao de transcricao usando API da OpenAI."""
 
-    def __init__(self, *, model: str, language: str | None = None, client: Any | None = None) -> None:
+    def __init__(self, *, model: str, language: str | None = None, client: Any | None = None, api_key: str | None = None, base_url: str | None = None) -> None:
         self._model = model
         self._language = language
-        self._client: Any = client or AsyncOpenAI(api_key=settings.openai_api_key)
+        resolved_api_key = api_key or settings.openai_api_key
+        self._client: Any = client or AsyncOpenAI(api_key=resolved_api_key, base_url=base_url)
 
     async def transcribe(self, *, audio_bytes: bytes, mime_type: str, file_name: str | None) -> AudioTranscription:
         """Executa transcricao no provider OpenAI e retorna texto consolidado."""
@@ -87,10 +88,21 @@ def build_audio_transcriber(*, client: Any | None = None) -> AudioTranscriber:
             language=settings.audio_transcription_language,
             client=client,
         )
+    
+    if provider == "groq":
+        groq_base_url = "https://api.groq.com/openai/v1"
+        groq_model = settings.audio_transcription_model if settings.audio_transcription_model != "whisper-1" else "whisper-large-v3"
+        return OpenAIAudioTranscriber(
+            model=groq_model,
+            language=settings.audio_transcription_language,
+            client=client,
+            api_key=settings.groq_api_key,
+            base_url=groq_base_url,
+        )
 
     raise UnsupportedAudioTranscriptionProviderError(
         "Provider de transcricao nao suportado: "
-        f"{settings.audio_transcription_provider}. Suportados atualmente: openai."
+        f"{settings.audio_transcription_provider}. Suportados atualmente: openai, groq."
     )
 
 
